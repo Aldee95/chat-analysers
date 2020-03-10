@@ -1,0 +1,523 @@
+function date_format(dater){
+  var date=new Date(dater.substr(6,4),dater.substr(3,2),dater.substr(0,2),dater.substr(12,2),dater.substr(15,2),0)
+  var dated=SpreadsheetApp.openById('1KEqNjmgbybM_poB742qgWtweYqhh6uf7u3NpRd5rXwI').getSheetByName('Counselors').getRange(2,12).getValue()
+  
+ 
+  if(date<dated){
+ 
+  }
+}
+function test(){
+  dval2('08/01/20, 12:59 pm')
+}
+function principal(){
+  var ss=SpreadsheetApp.openById('1KEqNjmgbybM_poB742qgWtweYqhh6uf7u3NpRd5rXwI');
+  var cs=ss.getSheetByName('Counselors');
+  var ft=ss.getSheetByName('File Taker');
+  var is=ss.getSheetByName('Input File');
+  var nFlag=0
+  var tc=ss.getSheetByName('Temp 1 Coun')
+  var tl=ss.getSheetByName('Temp 2 Lead')
+  if(tc.getLastColumn()>1){tc.getRange(1,2,tc.getLastRow(),tc.getLastColumn()-1).clear()}
+  if(tl.getLastColumn()>1){tl.getRange(1,2,tl.getLastRow(),tl.getLastColumn()-1).clear()}
+  var nCoun=cs.getRange(2,9).getValue();
+  var sc_time_array=new Array(720)
+  var sl_time_array=new Array(720)
+    for (t=0;t<720;t++){
+    sc_time_array[t]=0
+    sl_time_array[t]=0
+  }
+  var flag=cs.getRange(5,12).getValue();
+  if (flag==1)
+  {return 1;}
+  const cCoun=cs.getRange(2,10).getValue();
+  var sid=cs.getRange(2,15).getValue();
+  var emailid1=cs.getRange(2,14).getValue();
+  var emailid2=cs.getRange(2,13).getValue();
+  
+  const cCounId=cs.getRange(cCoun+1,5).getValue()
+  const cCounName=cs.getRange(cCoun+1,3).getValue()
+  const d_type=cs.getRange(cCoun+1,4).getValue()
+  const cRname=cs.getRange(cCoun+1,1).getValue()
+  var date_s=cs.getRange(2,12).getValue()
+  var date_e=cs.getRange(7,12).getValue()
+  is.getRange(2,7).setValue(cRname)
+  if(cCoun>nCoun){
+  if(cs.getRange(2,11).getValue()=='Working'){
+    cs.getRange(2,11).setValue('Day Over');
+    email(sid,emailid1,emailid2);
+    
+  };
+   return 1;
+  }; 
+  if(cCoun==1){
+    listFilesInFolder();
+    cs.getRange(2,10).setValue(cCoun+1);
+    return}; 
+  Utilities.sleep(6000);
+  var chats_name=[]
+  var lead_name=[]
+  for (j=2;j<is.getRange(10,7).getValue()+2;j++){
+    chats_name.push(is.getRange(j,2).getValue())
+    lead_name.push(is.getRange(j,4).getValue())
+  }
+  if(chats_name.length>1){
+    var obj4=relay(chats_name,lead_name,cCounName,date_s,date_e,sc_time_array,sl_time_array,d_type)
+    nFlag=1;
+    } 
+  
+  switch (cCoun){
+    case 1:
+      {var rss=SpreadsheetApp.openById('1FBbEUzG8TeddZ-r0tJXbxF2B-5phXVTJWp-7hePP1aM')
+       DriveApp.getFileById(sid).setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.EDIT);
+       var sheets=rss.getSheets()
+       for (m=0;m<sheets.length;m++){
+         if(sheet[m].getName()!='Dashboard'){
+           rss.deleteSheet(sheet[m])
+         }
+       };
+      }
+    default:
+      {var rss=SpreadsheetApp.openById(cs.getRange(2,15).getValue())};
+  }; 
+  Logger.log('Switch Say:O Debugger , Yaha nahi aana')
+  if (nFlag>0){
+  for (b=2;b<722;b++){
+    tc.getRange(b,2).setValue(obj4.scta[b-2])
+  }
+  for (c=2;c<722;c++){
+
+    tl.getRange(c,2).setValue(obj4.slta[c-2])
+  }
+  Logger.log('Plotter Say:O Debugger , Yaha nahi aana')
+  tc.copyTo(rss)
+  tl.copyTo(rss)
+  rss.getSheetByName('Copy of Temp 1 Coun').setName(cRname.concat(' Coun'))
+  rss.getSheetByName('Copy of Temp 2 Lead').setName(cRname.concat(' Lead'))
+  Logger.log('Copier Say:O Debugger , Yaha nahi aana')
+  }
+  cs.getRange(2,10).setValue(cCoun+1);
+}
+
+function summer(sheet,rowe,count){
+  var ss=SpreadsheetApp.openById('1KEqNjmgbybM_poB742qgWtweYqhh6uf7u3NpRd5rXwI');
+  var tc=ss.getSheetByName('Temp 1 Coun')
+  var tl=ss.getSheetByName('Temp 2 Lead')
+  var sum=0
+  for (f=3;f<3+count;f++){
+    if(f%3==0){
+    sum=sum+sheet.getRange(rowe,f).getValue()
+    }
+  }
+  return sum
+}
+  
+  
+  
+  
+  
+  
+function listFilesInFolder() {
+  var ss=SpreadsheetApp.openById('1KEqNjmgbybM_poB742qgWtweYqhh6uf7u3NpRd5rXwI');
+  var cs=ss.getSheetByName('Counselors');
+  var date1=cs.getRange(2,12).getValue();
+  var date2=cs.getRange(6,12).getValue();
+  var folder = DriveApp.getFoldersByName("Chats").next();
+  var contents = folder.getFiles();
+  var file, data
+  var sheet=ss.getSheetByName('File Taker');
+  var r1=sheet.getRange(1,1,1000,7);
+  r1.clear();
+  var type="text/plain";
+
+  
+  sheet.appendRow(["Name", "Date", "Size", "URL", "Download", "Description", "Type"]);
+  
+    
+ while (contents.hasNext())
+ {      
+   var file=contents.next();
+   if(file.getDateCreated()<=date1)
+    {break;}
+   if (file.getMimeType()==type && file.getDateCreated()>=date1 && (file.getDateCreated()<=date2 || (file.getDateCreated()>=date2 && file.getDateCreated().getHours()<12))){
+
+    data = [ 
+      file.getName(),
+      file.getDateCreated(),
+      file.getSize(),
+      file.getUrl(),
+      "https://docs.google.com/uc?export=download&confirm=no_antivirus&id=" + file.getId(),
+      file.getDescription(),
+      file.getMimeType()
+    ];
+    
+    sheet.appendRow(data);
+  }
+  }
+  
+};
+
+
+  
+function relay(chats_name,lead_name,cCounName,date_s,date_e,scta,slta,d_type){
+  var ss=SpreadsheetApp.openById('1KEqNjmgbybM_poB742qgWtweYqhh6uf7u3NpRd5rXwI');
+  var cs=ss.getSheetByName('Counselors');
+  var ft=ss.getSheetByName('File Taker');
+  var is=ss.getSheetByName('Input File');
+  for (z=0;z<chats_name.length;z++){
+    
+    var obj2=chat_base(chats_name[z],(3*z)+3,lead_name[z],cCounName,date_s,date_e,scta,slta,d_type)
+    scta=obj2.scta
+    slta=obj2.slta
+    Logger.log('Relay Completed')
+  }
+  var obj3={scta:scta,slta:slta};
+  return obj3
+}
+
+function take_filer(fileName){
+  var ssc=SpreadsheetApp.openById('1KEqNjmgbybM_poB742qgWtweYqhh6uf7u3NpRd5rXwI')
+  var s=ssc.getSheetByName('Temper')
+  var files = DriveApp.getFilesByName(fileName);
+  if (!files.hasNext()) {
+    throw new Error('No file with name:' + fileName);
+    return 0;
+  }
+    var file = files.next();
+  var lst1 = file.getBlob().getDataAsString('utf8').split('\n');
+  var len=lst1.length;
+  if (len>1000){
+    s.insertRowsAfter(1000,len-1000);
+  };
+  var i=0, row=2;
+  for (i in lst1) {
+    var range = s.getRange(row,1,1,1); //Instead of 3,4 -> lst1.length, ncols
+    range.setValue(lst1[i]);
+    row=row+1;
+  };
+}
+
+
+
+
+function chat_base(chat_name,num,lead_name,cCounName,date_s,date_e,scla,stla,d_type) {
+  /*Logger.log('Chat Base for '.concat((num)/3),' Started')*/
+  var ssc=SpreadsheetApp.openById('1KEqNjmgbybM_poB742qgWtweYqhh6uf7u3NpRd5rXwI')
+  var ss=ssc.getSheetByName('Temper')
+  var tc=ssc.getSheetByName('Temp 1 Coun')
+  var tl=ssc.getSheetByName('Temp 2 Lead')
+  var take_file=take_filer(chat_name)
+
+  var c_time_array=new Array(720)
+  var a_time_array=new Array(720)
+  var l_time_array=new Array(720)
+  var d_time_array=new Array(720)
+  
+  for (s=0;s<720;s++){
+    c_time_array[s]=0
+    l_time_array[s]=0
+    a_time_array[s]=''
+    d_time_array[s]=0
+    
+    
+  }
+  var vals=ss.getRange(1,1,ss.getLastRow()).getValues()
+  Logger.log('ValueLength: '.concat(vals.length))
+  if(d_type==1){
+  var dvals=vals.map(dval);
+  }
+  if(d_type==2){
+    var dvaled=vals.map(dval2);
+    
+    var dvals=dvaled.map(dvaluer);
+  }
+  if(d_type==3){
+   
+   
+    var dvaled=vals.map(dval3);
+    
+    var dvals=dvaled.map(dvaluer);
+  }
+  if(d_type==4){
+  var dvals=vals.map(dval4);
+  }
+  
+  var dval_check=dvals.map(pattern_check);
+  
+  Logger.log('Date Values Length'.concat(dvals.length))
+  Logger.log('Date Check length'.concat(dval_check.length))
+  
+  var i
+  var text_array=[]
+  var datesu=[]
+  
+  for (i=0;i<dval_check.length;){
+    if(dval_check[i]==true){
+     datesu[i]=dvals[i]
+      var j=1;
+      var text=vals[i][0].split(/:(.+)/)[1]
+      while (dval_check[i+j]==false){
+      
+        text=text.concat('\n',vals[i+j][0])
+        j++
+      }
+      i=i+j;
+      text_array.push(text)
+    }
+    else {i++;}
+  }
+  Logger.log(text_array.length)
+ 
+  var dates = datesu.filter(function (el) {
+    return el != null;
+  });
+ 
+  
+  
+  var name=[]
+  var text=[]
+  var datea=[]
+  for (k=0;k<text_array.length;k++){
+    var split=splitWithTail(text_array[k],"-",1)
+    
+    if(split[1].split(":").length-1>0){
+      
+      var text_split=splitWithTail(split[1],":",1)
+      name.push(text_split[0].substr(1,text_split[0].length))
+      text.push(text_split[1])
+      datea.push(dates[k])
+      }
+    
+  }
+  Logger.log('Text Length:'.concat(text.length))
+  datea=datea.map(datec)
+  Logger.log('Dates Length:'.concat(datea.length))
+  Logger.log('Text Length:'.concat(text.length))
+  Logger.log('Name Length:'.concat(name.length))
+  var obj=engine_time(datea,name,text,c_time_array,l_time_array,cCounName,lead_name,date_s,date_e,a_time_array,d_time_array,scla,stla)
+  var lta=obj.l_time_array
+  var cta=obj.c_time_array
+  var ata=obj.a_time_array
+  var dta=obj.d_time_array
+  var obj2={scta:obj.scta,slta:obj.slta}
+  tc.getRange(1,num).setValue(lead_name.concat(' Coun Resp'))
+  tl.getRange(1,num).setValue(lead_name.concat(' Lead Resp'))
+  tc.getRange(1,num+2).setValue(lead_name.concat(' Annotation'))
+  tl.getRange(1,num+2).setValue(lead_name.concat(' Annotation'))
+  tc.getRange(1,num+1).setValue(lead_name.concat(' Defaulting Array'))
+  tl.getRange(1,num+1).setValue(lead_name.concat(' Defaulting Array'))
+  for (m=2;m<722;m++){
+    tc.getRange(m,num).setValue(cta[m-2])
+    tc.getRange(m,num+1).setValue(dta[m-2])
+    tc.getRange(m,num+2).setValue(ata[m-2])
+    tl.getRange(m,num).setValue(lta[m-2])
+    tl.getRange(m,num+1).setValue(dta[m-2])
+    tl.getRange(m,num+2).setValue(ata[m-2])
+  }
+  ss.clear()  
+  return obj2
+  Logger.log('Chat Base for '.concat((num)/3),' Completed')
+}
+
+function dvaluer(value,index,array){
+  if(value[0]!=null){
+    
+    if(value[0].length>18){
+      var inp=value[0].substr(18,2)
+      if (inp=='am'){
+        
+        return value[0].substr(0,17)
+      }
+      else {
+        var hr=Number(value[0].substr(12,2))
+        if(hr<12){
+          hr=hr+12}
+        var final=value[0].substr(0,12).concat(hr,value[0].substr(14,3))
+ 
+        return final
+      }
+    }
+  }
+}
+    
+                                             
+
+function dval(value,index,array){
+  if(value[0].length>18){
+    return value[0].substr(0,17)}
+  else {
+    return value[0]}
+}
+function dval2(value,index,array){                           //for format dd/mm/yy h:mm am
+  if(value[0].length>16){
+    var dv1=value[0].substr(0,18)
+   
+    if (dv1.substr(15,2)=='am' || dv1.substr(15,2)=='pm'){
+      
+
+      
+        dv1=dv1.slice(0,6).concat('20',dv1.slice(6,10),'0',dv1.slice(10,18))
+        
+    }
+    else {
+      dv1=dv1.slice(0,6).concat('20',dv1.slice(6,18))
+    }
+    var temparr=[dv1]
+    
+    return temparr                      
+  }
+  else {
+    
+    return value[0]}
+}
+function dval3(value,index,array){                                       //for format dd/mm/yyyy h:mm am
+  
+  if(value[0].length>18){
+    
+    var dv1=value[0].substr(0,20)
+  
+    if (dv1.substr(17,2)=='am' || dv1.substr(17,2)=='pm'){
+      
+      
+
+        dv1=dv1.slice(0,6).concat(dv1.slice(6,12),'0',dv1.slice(12,19))
+
+    }
+    else {
+      dv1=dv1.slice(0,6).concat(dv1.slice(6,20))
+    }
+    var temparr=[dv1]
+    return temparr                       
+  }
+  else {
+    return value}
+}
+function dval4(value,index,array){  
+  //for format dd/mm/yy hh:mm 
+  if(value[0].length>14){
+    var dv1=value[0].substr(0,15)
+    dv1=dv1.slice(0,6).concat('20',dv1.slice(6,15))
+        
+    
+    
+    var temparr=[dv1]
+    
+    return temparr                      
+  }
+  else {
+    return value}
+}
+
+function tester(){
+ dval4('06/12/2019, 01:43')
+}
+function datec(value,index,array){
+  return new Date(value.substr(6,4),value.substr(3,2)-1,value.substr(0,2),value.substr(12,2),value.substr(15,2),0)
+}
+
+function pattern_check(value,index,array){
+  
+  var patt=/[0-9][0-9]\/[0-9][0-9]\/20[0-9][0-9], [0-9][0-9]:[0-9][0-9]/i
+  
+  
+  return patt.test(value)
+}
+  
+function splitWithTail(str,delim,count){
+  var parts = str.split(delim);
+  var tail = parts.slice(count).join(delim);
+  var result = parts.slice(0,count);
+  result.push(tail);
+  return result;
+}
+function email(sid,emailid1,emailid2){
+  var file = DriveApp.getFilesByName('ReportSat Jul 06 2019 16:07:05 GMT+0530 (IST)');
+  var dt=new Date;
+  var mon=dt.getMonth()+1
+   
+  GmailApp.sendEmail(emailid2, 'Others team Report for date'+" "+dt.getDate()+"-"+mon+"-"+dt.getYear(), 'Please see the attached file at following link https://docs.google.com/spreadsheets/d/'+sid);
+  
+  GmailApp.sendEmail('Lakshay.edoofa@gmail.com', 'Davi team Report for date'+" "+dt.getDate()+"-"+mon+"-"+dt.getYear(), 'Please see the attached file at following link https://docs.google.com/spreadsheets/d/'+sid);
+  GmailApp.sendEmail('avreen@anhadedutrain.com', 'Davi team Report for date'+" "+dt.getDate()+"-"+mon+"-"+dt.getYear(), 'Please see the attached file at following link https://docs.google.com/spreadsheets/d/'+sid);
+};
+
+function engine_time(date,name,text,c_time_array,l_time_array,c_name,l_name,date_s,date_e,a_time_array,d_time_array,scta,slta){
+  var text_time
+  var textHist
+  var j
+ 
+  
+  for (i=0;i<date.length;i++){
+    if(text[i]!=null)
+    { 
+      text_time=text[i].length/4}
+    else{text_time=0}
+    if(date[i].getHours()>10 && date[i].getHours()<23 && date_s.getDate()==date[i].getDate()){
+     
+      j=(((date[i].getHours())*60)-660)+date[i].getMinutes()
+      if (name[i]==c_name){
+        if (text_time>80){
+        c_time_array[j]=c_time_array[j]+10
+        scta[j]=scta[j]+10
+        slta[j]=slta[j]}
+        else{
+          c_time_array[j]=c_time_array[j]+text_time
+        scta[j]=scta[j]+text_time
+        slta[j]=slta[j]
+        }
+        if (date[i]-date[i-1]>900000 && name[i-1]!=c_name && date[i-1].getDate()==date_s.getDate()){
+          
+        
+          
+         
+          d_time_array[j]=1
+          if (i>4){
+          a_time_array[j]=date[i-4].toLocaleTimeString().concat(' ',name[i-4],'-',text[i-4],'\n',date[i-3].toLocaleTimeString(),' ',name[i-3],'-',text[i-3],'\n',date[i-2].toLocaleTimeString(),' ',name[i-2],'-',text[i-2],'\n',date[i-1].toLocaleTimeString(),' ',name[i-1],'-',text[i-1],'\n',date[i].toLocaleTimeString(),' ',name[i],'-',text[i],'\n')
+          }
+          else if (i>3){
+            a_time_array[j]=date[i-3].toLocaleTimeString().concat(' ',name[i-3],'-',text[i-3],'\n',date[i-2].toLocaleTimeString(),' ',name[i-2],'-',text[i-2],'\n',date[i-1].toLocaleTimeString(),' ',name[i-1],'-',text[i-1],'\n',date[i].toLocaleTimeString(),' ',name[i],'-',text[i],'\n')
+          }
+          else if (i>2){
+            a_time_array[j]=date[i-2].toLocaleTimeString().concat(' ',name[i-2],'-',text[i-2],'\n',date[i-1].toLocaleTimeString(),' ',name[i-1],'-',text[i-1],'\n',date[i].toLocaleTimeString(),' ',name[i],'-',text[i],'\n')
+          }
+          else if (i>1){
+            a_time_array[j]=date[i-1].toLocaleTimeString().concat(' ',name[i-1],'-',text[i-1],'\n',date[i].toLocaleTimeString(),' ',name[i],'-',text[i],'\n')
+          }
+          else if (i>0){
+            a_time_array[j]=date[i].toLocaleTimeString().concat(' ',name[i],'-',text[i],'\n')
+          }
+        }
+      }
+      else {
+        l_time_array[j]=l_time_array[j]+text_time
+        
+        scta[j]=scta[j]
+        slta[j]=slta[j]+text_time
+      }
+    }
+  }
+  var obj={l_time_array:l_time_array,c_time_array:c_time_array,a_time_array:a_time_array,d_time_array:d_time_array,slta:slta,scta:scta}
+  Logger.log('Chat Base for '.concat(l_name,' Completed'))
+  return obj
+}
+        
+function executor1(){
+  var ss=SpreadsheetApp.openById('1KEqNjmgbybM_poB742qgWtweYqhh6uf7u3NpRd5rXwI');
+  var cs=ss.getSheetByName('Counselors');
+  cs.getRange(2,10).setValue('1')
+  var val=SpreadsheetApp.openById('1KEqNjmgbybM_poB742qgWtweYqhh6uf7u3NpRd5rXwI').getSheetByName('Counselors').getRange(2,9).getValue()
+  for (e=0;e<7;e++)
+  {
+    principal()
+  }
+}
+function executor2(){
+  var ss=SpreadsheetApp.openById('1KEqNjmgbybM_poB742qgWtweYqhh6uf7u3NpRd5rXwI');
+  var cs=ss.getSheetByName('Counselors');
+  var val=SpreadsheetApp.openById('1KEqNjmgbybM_poB742qgWtweYqhh6uf7u3NpRd5rXwI').getSheetByName('Counselors').getRange(2,9).getValue()
+  for (e=7;e<val;e++)
+  {
+    principal()
+  }
+}
+
