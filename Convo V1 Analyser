@@ -1,0 +1,983 @@
+function headMaster(){
+  var ss=SpreadsheetApp.openByUrl('https://docs.google.com/spreadsheets/d/1N_wbQWD2Rl5DdHEcdynp-_yERSqLTMbtmAhpmUVQhX0/edit');
+  var is=ss.getSheetByName('Input File');
+  var cs=ss.getSheetByName('Counsellors');
+  var nCoun=cs.getRange(2,9).getValue();
+  var flag=cs.getRange(5,12).getValue(); 
+  if (flag==1)
+  {return 1;}; 
+  const cCoun=cs.getRange(2,10).getValue();
+  var sid=cs.getRange(2,15).getValue();
+  var emailid1=cs.getRange(2,14).getValue();
+  var emailid2=cs.getRange(2,13).getValue();
+  is.getRange(6,7).setValue(cs.getRange(2,12).getValue());
+  is.getRange(8,7).setValue(cs.getRange(4,12).getValue());
+  is.getRange(1,9).setValue(cs.getRange(3,12).getValue());
+  is.getRange(1,10).setValue(cs.getRange(3,12).getValue());
+  is.getRange(7,9).setValue(cs.getRange(3,12).getValue()); 
+  if(cs.getRange(2,11).getValue()=='Day Over'){
+    return 0;}; 
+  if(cCoun>nCoun)
+  {if(cs.getRange(2,11).getValue()=='Working'){
+    cs.getRange(2,11).setValue('Day Over');
+      email(sid,emailid1,emailid2);
+       
+  };
+   return 1;
+  }; 
+  
+  var sourcers=ss.getSheetByName('Report');
+  var cCounName=cs.getRange(cCoun+1,1).getValue();
+  var temp=ss.getSheetByName('Temp');
+  temp.clear();
+  is.getRange(2,7).setValue(cCounName);
+  if(cCoun==1){
+    listFilesInFolder();};
+  Utilities.sleep(12000) 
+  getChat();
+ is.getRange(11,7).setValue('Report'); 
+   
+  switch (cCoun){
+    case 1:
+      {var rss=SpreadsheetApp.create('Report'+new Date);
+           cs.getRange(2,15).setValue(rss.getId());
+        DriveApp.getFileById(sid).setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.EDIT);
+       rss.addEditor('Lakshay.edoofa@gmail.com');
+  };
+    default:
+      {var rss=SpreadsheetApp.openById(cs.getRange(2,15).getValue());};
+  };
+
+  sourcers.getRange('1:130').copyTo(temp.getRange('1:130'), SpreadsheetApp.CopyPasteType.PASTE_VALUES, false);
+          
+          DriveApp.getFileById(sid).setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.EDIT);
+         
+  temp.copyTo(rss); 
+  var rs=rss.getSheetByName('Copy of Temp');
+  rs.setName(cs.getRange(cCoun+1,1).getValue());
+  var nrs=rss.getSheetByName(cs.getRange(cCoun+1,1).getValue()).activate();
+  ReportMaker(rss.getId(),cs.getRange(cCoun+1,1).getValue());
+  if(cCoun==2){
+    var s1=rss.getSheetByName('Sheet1'); 
+    rss.deleteSheet(s1); 
+
+  };
+  cs.getRange(2,10).setValue(cCoun+1); 
+  is.activate();  
+ reseter();
+};
+  
+function dayReset(){
+   var ss=SpreadsheetApp.openByUrl('https://docs.google.com/spreadsheets/d/1N_wbQWD2Rl5DdHEcdynp-_yERSqLTMbtmAhpmUVQhX0/edit');
+  var is=ss.getSheetByName('Input File');
+  var cs=ss.getSheetByName('Counsellors');
+  cs.getRange(2,10).setValue(1);
+  cs.getRange(2,11).setValue('Working');
+};
+  
+function listFilesInFolder() {
+   var ss=SpreadsheetApp.openByUrl('https://docs.google.com/spreadsheets/d/1N_wbQWD2Rl5DdHEcdynp-_yERSqLTMbtmAhpmUVQhX0/edit');
+  var is=ss.getSheetByName('Input File');
+  var date11=is.getRange(6,7);
+  var date22=is.getRange(8,9);
+  var coun1=is.getRange(2,7);
+  var date1=date11.getValue();
+  var date2=date22.getValue();
+  var coun=coun1.getValue();
+  var folder = DriveApp.getFoldersByName("Chats").next();
+  var contents = folder.getFiles();
+  var file, data
+  var sheet=ss.getSheetByName('File Taker');
+  sheet.clear();
+  var r1=sheet.getRange(1,1,1000,7);
+  r1.clear();
+  var type="text/plain";
+
+  
+  sheet.appendRow(["Name", "Date", "Size", "URL", "Download", "Description", "Type"]);
+  
+    
+ while (contents.hasNext())
+ {      var file=contents.next();
+  if (file.getMimeType()==type && file.getDateCreated()>=date1 && file.getDateCreated()<=date2){
+    data = [ 
+      file.getName(),
+      file.getDateCreated(),
+      file.getSize(),
+      file.getUrl(),
+      "https://docs.google.com/uc?export=download&confirm=no_antivirus&id=" + file.getId(),
+      file.getDescription(),
+      file.getMimeType()
+    ];
+    
+    sheet.appendRow(data);
+  }
+  }
+  
+};
+
+
+
+
+
+function Spliter1(sn) {
+  var spreadsheet = SpreadsheetApp.openByUrl('https://docs.google.com/spreadsheets/d/1N_wbQWD2Rl5DdHEcdynp-_yERSqLTMbtmAhpmUVQhX0/edit');
+  spreadsheet.getSheetByName(sn).activate();
+  spreadsheet.getRange('A:F').activate();
+  spreadsheet.getRange('A:A').splitTextToColumns('-');
+  spreadsheet.getRange('B:B').activate();
+  spreadsheet.getActiveSheet().insertColumnsBefore(spreadsheet.getActiveRange().getColumn(), 1);
+  spreadsheet.getActiveRange().offset(0, 0, spreadsheet.getActiveRange().getNumRows(), 1).activate();
+  spreadsheet.getRange('B3').activate();
+  spreadsheet.getCurrentCell().setFormula('=IFerror(IF(OR(right(A3,2)="PM",right(A3,2)="AM"),IF(Right(A3,2)="AM",Timevalue(LEFT(Right(A3,8),3)&LEFT(Right(A3,5),2)),Timevalue(LEFT(Right(A3,8),3)&LEFT(Right(A3,5),2))+0.5),IFerror(timevalue(left(right(A3,5),3)&right(A3,2)),"")),"")');
+  spreadsheet.getActiveRange().autoFill(spreadsheet.getRange('B3:B'), SpreadsheetApp.AutoFillSeries.DEFAULT_SERIES);
+  spreadsheet.getRange('C:C').activate();
+  spreadsheet.setCurrentCell(spreadsheet.getRange('C12'));
+  
+  spreadsheet.getRange('1:1').activate();
+  spreadsheet.getActiveSheet().insertRowsBefore(spreadsheet.getActiveRange().getRow(), 1);
+  spreadsheet.getActiveRange().offset(0, 0, 1, spreadsheet.getActiveRange().getNumColumns()).activate();
+  spreadsheet.getActiveSheet().insertRowsBefore(spreadsheet.getActiveRange().getRow(), 1);
+  spreadsheet.getActiveRange().offset(0, 0, 1, spreadsheet.getActiveRange().getNumColumns()).activate();
+  spreadsheet.getRange('A1').activate();
+  spreadsheet.getCurrentCell().setValue('Counseller name ');
+  spreadsheet.getRange('B1').activate();
+  spreadsheet.getCurrentCell().setValue('Preferred name ');
+  spreadsheet.getRange('C1').activate();
+  spreadsheet.getCurrentCell().setValue('Script followed ');
+  spreadsheet.getRange('I1').activate();
+  spreadsheet.getRange('L4').activate();
+  
+};
+
+function Spliter2(sn) {
+  var spreadsheet = SpreadsheetApp.openByUrl('https://docs.google.com/spreadsheets/d/1N_wbQWD2Rl5DdHEcdynp-_yERSqLTMbtmAhpmUVQhX0/edit');
+   spreadsheet.getSheetByName(sn).activate();
+  spreadsheet.getRange('B:B').activate();
+  spreadsheet.getActiveRangeList().setNumberFormat('HH:mm:ss');
+
+  spreadsheet.getRange('C:C').activate();
+  spreadsheet.getRange('C:C').splitTextToColumns(':');
+  spreadsheet.getRange('D1').setFormula('=Query(C:C,"SELECT C,Count(C) Group By C Order By Count(C) Desc LIMIT 2 Label Count(C) \'\'")');
+  spreadsheet.getRange('F1').setFormula('=Iferror(iF(D1=$A$2,$D$2,$D$1),"No name")');
+  spreadsheet.getRange('I3').activate();
+  spreadsheet.getCurrentCell().setFormula('=IF(Cell("Type",B3)<>"v","",IF(Cell("type",B4)="v",Concatenate(D3:H3),IF(cell("Type",B5)="v",concatenate(D3:H3,A4:H4),IF(cell("Type",B6)="v",concatenate(D3:H3,A4:H4,A5:H5),IF(cell("Type",B7)="v",concatenate(D3:H3,A4:H4,A5:H5,A6:H6),IF(cell("Type",B8)="v",concatenate(D3:H3,A4:H4,A5:H5,A6:H6,A7:H7),IF(cell("Type",B9)="v",concatenate(D3:H3,A4:H4,A5:H5,A6:H6,A7:H7,A8:H8),IF(cell("Type",B10)="v",concatenate(D3:H3,A4:H4,A5:H5,A6:H6,A7:H7,A8:H8,A9:H9),IF(cell("Type",B11)="v",concatenate(D3:H3,A4:H4,A5:H5,A6:H6,A7:H7,A8:H8,A9:H9,A10:H10),IF(cell("Type",B12)="v",concatenate(D3:H3,A4:H4,A5:H5,A6:H6,A7:H7,A8:H8,A9:H9,A10:H10,A11:H11),IF(cell("Type",B13)="v",concatenate(D3:H3,A4:H4,A5:H5,A6:H6,A7:H7,A8:H8,A9:H9,A10:H10,A11:H11,A12:H12),IF(cell("Type",B14)="v",concatenate(D3:H3,A4:H4,A5:H5,A6:H6,A7:H7,A8:H8,A9:H9,A10:H10,A11:H11,A12:H12,A13:H13),IF(cell("Type",B15)="v",concatenate(D3:H3,A4:H4,A5:H5,A6:H6,A7:H7,A8:H8,A9:H9,A10:H10,A11:H11,A12:H12,A13:H13,A14:H14),IF(cell("Type",B16)="v",concatenate(D3:H3,A4:H4,A5:H5,A6:H6,A7:H7,A8:H8,A9:H9,A10:H10,A11:H11,A12:H12,A13:H13,A14:H14,A15:H15),IF(cell("Type",B17)="v",concatenate(D3:H3,A4:H4,A5:H5,A6:H6,A7:H7,A8:H8,A9:H9,A10:H10,A11:H11,A12:H12,A13:H13,A14:H14,A15:H15,A16:H16),concatenate(D3:H3,A4:H4,A5:H5,A6:H6,A7:H7,A8:H8,A9:H9,A10:H10,A11:H11,A12:H12,A13:H13,A14:H14,A15:H15,A16:H16,A17:H17))))))))))))))))');
+  spreadsheet.getActiveRange().autoFill(spreadsheet.getRange('I3:I'), SpreadsheetApp.AutoFillSeries.DEFAULT_SERIES);
+  spreadsheet.getRange('J3').activate();
+  spreadsheet.getCurrentCell().setFormula('=IF(B3="v",concatenate(D3:H3),concatenate(A3:H3))')
+  .setFormula('=IF(Cell("type",B3)="v",concatenate(D3:H3),concatenate(A3:H3))');
+  spreadsheet.getActiveRange().autoFill(spreadsheet.getRange('J3:J'), SpreadsheetApp.AutoFillSeries.DEFAULT_SERIES);
+  spreadsheet.getRange('K3').activate();
+
+    spreadsheet.getRange('I1').activate();
+  spreadsheet.getCurrentCell().setValue('Office Open');
+  spreadsheet.getRange('J1').activate();
+  spreadsheet.getCurrentCell().setValue('Lunch_Start');
+  spreadsheet.getRange('K1').activate();
+  spreadsheet.getCurrentCell().setValue('Lunch_End');
+  spreadsheet.getRange('L1').activate();
+  spreadsheet.getCurrentCell().setValue('Office Close ');
+  spreadsheet.getRange('I2').activate();
+  spreadsheet.getCurrentCell().setValue('11:15');
+  spreadsheet.getRange('J2').activate();
+  spreadsheet.getCurrentCell().setValue('14:00');
+  spreadsheet.getRange('K2').activate();
+  spreadsheet.getCurrentCell().setValue('15:00');
+  spreadsheet.getRange('L2').activate();
+  spreadsheet.getCurrentCell().setValue('20:00');
+  spreadsheet.getRange('M2').activate();
+  spreadsheet.getCurrentCell().setValue('9:00');
+  spreadsheet.getRange('I3').activate();
+  
+  spreadsheet.getRange('K3').activate();         //Replacer 
+  spreadsheet.getCurrentCell().setFormula('=Trim(IF(C3=$A$2,IF(I3<>"",IFerror(REplace(I3,Search($B$2,I3),Len($B$2),"Name1"),I3),""),I3))');
+  spreadsheet.getActiveRange().autoFill(spreadsheet.getRange('K3:K'), SpreadsheetApp.AutoFillSeries.DEFAULT_SERIES);
+  spreadsheet.getRange('L3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Trim(IF(J3<>"",IFerror(REplace(J3,Search($B$2,J3),Len($B$2),"Name1"),J3),""))');
+  spreadsheet.getActiveRange().autoFill(spreadsheet.getRange('L3:L'), SpreadsheetApp.AutoFillSeries.DEFAULT_SERIES);
+  
+          //Script maker
+  spreadsheet.getRange('M74').activate();
+  spreadsheet.getCurrentCell().setFormula('=IF(K74<>"<Media omitted>", IF(K74<>"",IF(Countif(Sheet2!G:G,K74)>0,"S","NS"),""),"SS")');
+  spreadsheet.getRange('N74').activate();
+  spreadsheet.getCurrentCell().setFormula('=IF(L74<>"<Media omitted>", IF(L74<>"",IF(Countif(Sheet2!G:G,L74)>0,"S","NS"),""),"SS")');
+  spreadsheet.getRange('O74').activate();
+  spreadsheet.getCurrentCell().setFormula('=IF(Cell("Type",B74)="v",IF(M74="S","FS",IF(AND(M74="NS",N74="S"),"HS",IF(AND(M74="NS",N74="NS"),If(Cell("Type",B75)="v","FNS",IF(N75="S","HS",IF(Cell("Type",B76)="v","FNS",IF(N76="S","HS",IF(Cell("Type",B77)="v","FNS",IF(N77="S","HS",IF(Cell("Type",B78)="v","FNS",IF(N78="S","HS",IF(Cell("Type",B79)="v","FNS",IF(N79="S","HS",IF(Cell("Type",B80)="v","FNS",IF(N80="S","HS",IF(Cell("Type",B81)="v","FNS",IF(N81="S","HS",IF(Cell("Type",B82)="v","FNS",IF(N82="S","HS",IF(Cell("Type",B83)="v","FNS",IF(N83="S","HS","FNS"))))))))))))))))))))),IF(AND(M74="",N74=""),"",IF(AND(M74="",N74="S"),"HS",IF(AND(M74="",N74="NS"),"HNS","CASE"))))');
+  spreadsheet.getRange('P74').activate();
+  spreadsheet.getCurrentCell().setFormula('=IF(O74="","",IF(M74="SS","SS", IF(IF(row()>4,IF(Cell("type",B74)="v",C74,IF(Cell("type",B73)="v",C73,IF(Cell("type",B72)="v",C72,IF(Cell("type",B71)="v",C71,IF(Cell("type",B70)="v",C70,IF(Cell("type",B69)="v",C69,IF(Cell("type",B68)="v",C68,IF(Cell("type",B67)="v",C67,IF(Cell("type",B66)="v",C66,IF(Cell("type",B65)="v",C65,IF(Cell("type",B64)="v",C64,IF(Cell("type",B63)="v",C63,IF(Cell("type",B62)="v",C62,IF(Cell("type",B61)="v",C61,IF(Cell("type",B60)="v",C60,IF(Cell("type",B59)="v",C59,IF(Cell("type",B58)="v",C58,IF(Cell("type",B57)="v",C57,IF(Cell("type",B56)="v",C56,IF(Cell("type",B55)="v",C55,IF(Cell("type",B54)="v",C54,IF(Cell("type",B53)="v",C53,IF(Cell("type",B52)="v",C52,IF(Cell("type",B51)="v",C51,IF(Cell("type",B50)="v",C50,"T"))))))))))))))))))))))))),"")=$A$2,Concatenate("C",O74),IF(IF(row()>4,IF(Cell("type",B74)="v",C74,IF(Cell("type",B73)="v",C73,IF(Cell("type",B72)="v",C72,IF(Cell("type",B71)="v",C71,IF(Cell("type",B70)="v",C70,IF(Cell("type",B69)="v",C69,IF(Cell("type",B68)="v",C68,IF(Cell("type",B67)="v",C67,IF(Cell("type",B66)="v",C66,IF(Cell("type",B65)="v",C65,IF(Cell("type",B64)="v",C64,IF(Cell("type",B63)="v",C63,IF(Cell("type",B62)="v",C62,IF(Cell("type",B61)="v",C61,IF(Cell("type",B60)="v",C60,IF(Cell("type",B59)="v",C59,IF(Cell("type",B58)="v",C58,IF(Cell("type",B57)="v",C57,IF(Cell("type",B56)="v",C56,IF(Cell("type",B55)="v",C55,IF(Cell("type",B54)="v",C54,IF(Cell("type",B53)="v",C53,IF(Cell("type",B52)="v",C52,IF(Cell("type",B51)="v",C51,IF(Cell("type",B50)="v",C50,"T"))))))))))))))))))))))))),"")=$F$1,Concatenate("L",O74),concatenate("T",O74)))))');
+  spreadsheet.getRange('Q74').activate();
+  spreadsheet.getCurrentCell().setFormula('=IF(O74="","", IF(LEFt(P74,1)="C",IF(OR(O74="HNS",O74="FNS"),LEN(J74)/3,IF(O74="HS",4,IF(O74="FS",12,IF(O74="SS",4,"CASE")))),LEN(J74)/20))');
+  spreadsheet.getRange('R74').activate();
+  spreadsheet.getCurrentCell().setFormula('=IF(O74="","", IF(LEFt(P74,1)="L",IF(OR(O74="HNS",O74="FNS"),LEN(J74)/3,IF(O74="HS",4,IF(O74="FS",12,IF(O74="SS",4,"CASE")))),LEN(J74)/20))');
+  spreadsheet.getRange('R75').activate();
+    spreadsheet.getRange('M74').activate();
+  spreadsheet.getActiveRange().autoFill(spreadsheet.getRange('M3:M74'), SpreadsheetApp.AutoFillSeries.DEFAULT_SERIES);
+  spreadsheet.getActiveRange().autoFill(spreadsheet.getRange('M74:M'),SpreadsheetApp.AutoFillSeries.DEFAULT_SERIES);
+  spreadsheet.getRange('N74').activate();
+  spreadsheet.getActiveRange().autoFill(spreadsheet.getRange('N3:N74'), SpreadsheetApp.AutoFillSeries.DEFAULT_SERIES);
+  spreadsheet.getRange('N3:N74').activate();
+  spreadsheet.setCurrentCell(spreadsheet.getRange('N74'));
+  spreadsheet.getRange('N74').activate();
+  spreadsheet.getActiveRange().autoFill(spreadsheet.getRange('N74:N'),SpreadsheetApp.AutoFillSeries.DEFAULT_SERIES);
+  spreadsheet.getRange('O74').activate();
+  spreadsheet.getActiveRange().autoFill(spreadsheet.getRange('O3:O74'), SpreadsheetApp.AutoFillSeries.DEFAULT_SERIES);
+  spreadsheet.getActiveRange().autoFill(spreadsheet.getRange('O74:O'),SpreadsheetApp.AutoFillSeries.DEFAULT_SERIES);
+  spreadsheet.getRange('P74').activate();
+  spreadsheet.getActiveRange().autoFill(spreadsheet.getRange('P3:P74'), SpreadsheetApp.AutoFillSeries.DEFAULT_SERIES);
+  spreadsheet.getRange('P3:P74').activate();
+  spreadsheet.setCurrentCell(spreadsheet.getRange('P74'));
+  spreadsheet.getRange('P74').activate();
+  spreadsheet.getActiveRange().autoFill(spreadsheet.getRange('P74:P'),SpreadsheetApp.AutoFillSeries.DEFAULT_SERIES);
+  spreadsheet.getRange('Q74').activate();
+  spreadsheet.getActiveRange().autoFill(spreadsheet.getRange('Q3:Q74'), SpreadsheetApp.AutoFillSeries.DEFAULT_SERIES);
+  spreadsheet.getRange('Q3:Q74').activate();
+  spreadsheet.setCurrentCell(spreadsheet.getRange('Q74'));
+  spreadsheet.getRange('Q74').activate();
+  spreadsheet.getActiveRange().autoFill(spreadsheet.getRange('Q74:Q'),SpreadsheetApp.AutoFillSeries.DEFAULT_SERIES);
+  spreadsheet.getRange('R74').activate();
+  spreadsheet.getActiveRange().autoFill(spreadsheet.getRange('R3:R74'), SpreadsheetApp.AutoFillSeries.DEFAULT_SERIES);
+  spreadsheet.getRange('R74').activate();
+  spreadsheet.getActiveRange().autoFill(spreadsheet.getRange('R74:R'),SpreadsheetApp.AutoFillSeries.DEFAULT_SERIES);
+  spreadsheet.getRange('R76').activate();
+  
+    spreadsheet.getRange('S3').activate();
+  spreadsheet.getRange('A3:A').copyTo(spreadsheet.getActiveRange(), SpreadsheetApp.CopyPasteType.PASTE_NORMAL, false);
+  spreadsheet.getRange('S1:AH').activate();
+  spreadsheet.getRange('S:S').splitTextToColumns(SpreadsheetApp.TextToColumnsDelimiter.COMMA);
+  spreadsheet.getRange('T74').activate();
+  spreadsheet.getCurrentCell().setFormula('=if(type(IF(A74<>"",IFerror(IF(Cell("type",B74)="v",S74,IF(Cell("type",B73)="v",S73,IF(Cell("type",B72)="v",S72,IF(Cell("type",B71)="v",S71,IF(Cell("type",B70)="v",S70,IF(Cell("type",B69)="v",S69,IF(Cell("type",B68)="v",S68,IF(Cell("type",B67)="v",S67,IF(Cell("type",B66)="v",S66,IF(Cell("type",B65)="v",S65,IF(Cell("type",B64)="v",S64,IF(Cell("type",B63)="v",S63,IF(Cell("type",B62)="v",S62,IF(Cell("type",B61)="v",S61,IF(Cell("type",B60)="v",S60,IF(Cell("type",B59)="v",S59,IF(Cell("type",B58)="v",S58,IF(Cell("type",B57)="v",S57,IF(Cell("type",B56)="v",S56,IF(Cell("type",B55)="v",S55,IF(Cell("type",B54)="v",S54,IF(Cell("type",B53)="v",S53,IF(Cell("type",B52)="v",S52,IF(Cell("type",B51)="v",S51,IF(Cell("type",B50)="v",S50,""))))))))))))))))))))))))),""),""))=1,IF(A74<>"",IFerror(IF(Cell("type",B74)="v",S74,IF(Cell("type",B73)="v",S73,IF(Cell("type",B72)="v",S72,IF(Cell("type",B71)="v",S71,IF(Cell("type",B70)="v",S70,IF(Cell("type",B69)="v",S69,IF(Cell("type",B68)="v",S68,IF(Cell("type",B67)="v",S67,IF(Cell("type",B66)="v",S66,IF(Cell("type",B65)="v",S65,IF(Cell("type",B64)="v",S64,IF(Cell("type",B63)="v",S63,IF(Cell("type",B62)="v",S62,IF(Cell("type",B61)="v",S61,IF(Cell("type",B60)="v",S60,IF(Cell("type",B59)="v",S59,IF(Cell("type",B58)="v",S58,IF(Cell("type",B57)="v",S57,IF(Cell("type",B56)="v",S56,IF(Cell("type",B55)="v",S55,IF(Cell("type",B54)="v",S54,IF(Cell("type",B53)="v",S53,IF(Cell("type",B52)="v",S52,IF(Cell("type",B51)="v",S51,IF(Cell("type",B50)="v",S50,""))))))))))))))))))))))))),""),""),"")');
+  spreadsheet.getActiveRange().autoFill(spreadsheet.getRange('T3:T74'), SpreadsheetApp.AutoFillSeries.DEFAULT_SERIES);
+    spreadsheet.getRange('T74').activate();
+  spreadsheet.getActiveRange().autoFill(spreadsheet.getRange('T74:T'),SpreadsheetApp.AutoFillSeries.DEFAULT_SERIES);
+  spreadsheet.getRange('T3:T').activate();
+  spreadsheet.getActiveRangeList().setNumberFormat('dd/MM/yyyy');
+  spreadsheet.getRange('U3').activate();
+  spreadsheet.getActiveRangeList().clear({contentsOnly: true, skipFilteredRows: true});
+  spreadsheet.getRange('R2').activate();
+
+  spreadsheet.getRange('V3').activate();
+};
+
+
+
+
+
+
+
+
+
+
+
+function MASTER(n) {
+  var ss=SpreadsheetApp.openByUrl('https://docs.google.com/spreadsheets/d/1N_wbQWD2Rl5DdHEcdynp-_yERSqLTMbtmAhpmUVQhX0/edit');
+  
+  var is=ss.getSheetByName('Input File');
+  var sheetNo=is.getRange(n,5);
+  var sn=sheetNo.getValue();
+  var nameRange=is.getRange(n,4);
+  var counRange=is.getRange(n,3);
+  var name=nameRange.getValue();
+  var coun=counRange.getValue();
+  var s=ss.getSheetByName(sn).activate();
+  s.getRange('A1:A').activate();
+  Spliter1(sn);
+  s.getRange('B2').activate();
+  s.getCurrentCell().setValue(name);
+  s.getRange('A2').activate().setValue(coun);
+  Spliter2(sn);
+  PivotPivotPivot(sn);
+
+};
+
+
+
+function PivotPivotPivot(sn) {
+  var spreadsheet = SpreadsheetApp.openByUrl('https://docs.google.com/spreadsheets/d/1N_wbQWD2Rl5DdHEcdynp-_yERSqLTMbtmAhpmUVQhX0/edit');
+   spreadsheet.getSheetByName(sn).activate();
+  spreadsheet.getRange('V2:X').clear();
+  spreadsheet.getRange('V1').activate();
+  var sourceData = spreadsheet.getRange('Q:T');
+  var pivotTable = spreadsheet.getRange('V3').createPivotTable(sourceData);
+  spreadsheet.getRange('V3').activate();
+  var pivotGroup = pivotTable.addRowGroup(20);
+  var pivotValue = pivotTable.addPivotValue(17, SpreadsheetApp.PivotTableSummarizeFunction.SUM);
+  var pivotValue = pivotTable.addPivotValue(18, SpreadsheetApp.PivotTableSummarizeFunction.SUM);
+  spreadsheet.getRange('W11').activate();
+  spreadsheet.getRange('W:X').setNumberFormat('0.000');
+  
+
+};
+
+
+
+function getChat(){
+  var ss=SpreadsheetApp.openByUrl('https://docs.google.com/spreadsheets/d/1N_wbQWD2Rl5DdHEcdynp-_yERSqLTMbtmAhpmUVQhX0/edit');
+  var is=ss.getSheetByName('Input File');
+  var NumSheets1=is.getRange(10,7);
+  
+  var NumSheet=NumSheets1.getValue();
+  if(NumSheet<2)
+  {return 1;};
+  var i;
+  for (i=2 ; i<Math.min(52,2+NumSheet) ; i++) {
+  getChats(i);
+  MASTER(i);
+  };
+  is.activate();
+};
+
+function reseter(){
+  var ss=SpreadsheetApp.openByUrl('https://docs.google.com/spreadsheets/d/1N_wbQWD2Rl5DdHEcdynp-_yERSqLTMbtmAhpmUVQhX0/edit'); 
+  var is=ss.getSheetByName('Input File');
+  var NumSheets1=is.getRange(10,7);
+  var NumSheet=NumSheets1.getValue();
+   var form=is.getRange(2,9);
+  form.setFormula('=Query({Sheet4!$U:$V;Sheet5!$U:$V;Sheet6!$U:$V;Sheet7!$U:$V;Sheet8!$U:$V;Sheet9!$U:$V;Sheet10!$U:$V;Sheet11!$U:$V;Sheet12!$U:$V;Sheet13!$U:$V;Sheet14!$U:$V;Sheet15!$U:$V;Sheet16!$U:$V;Sheet17!$U:$V;Sheet18!$U:$V;Sheet19!$U:$V;Sheet20!$U:$V;Sheet21!$U:$V;Sheet22!$U:$V;Sheet23!$U:$V;Sheet24!$U:$V;Sheet25!$U:$V;Sheet26!$U:$V;Sheet27!$U:$V;Sheet28!$U:$V;Sheet29!$U:$V;Sheet30!$U:$V;Sheet31!$U:$V;Sheet32!$U:$V;Sheet33!$U:$V;Sheet34!$U:$V;Sheet35!$U:$V;Sheet37!$U:$V;Sheet38!$U:$V;Sheet39!$U:$V;Sheet40!$U:$V;Sheet41!$U:$V;Sheet42!$U:$V;Sheet43!$U:$V;Sheet44!$U:$V;Sheet45!$U:$V;Sheet46!$U:$V;Sheet47!$U:$V;Sheet48!$U:$V;Sheet49!$U:$V;Sheet50!$U:$V;Sheet51!$U:$V;Sheet52!$U:$V;Sheet53!$U:$V;Sheet54!$U:$V;Sheet55!$U:$V;Sheet56!$U:$V;Sheet57!$U:$V;Sheet58!$U:$V;Sheet36!$U:$V},"SELECT SUM(Col2) where Col1>=Date \'"&TEXT(I1,"yyyy-mm-dd")&"\' AND Col1<=Date \'"&TEXT(J1,"yyyy-mm-dd")&"\'" )\n');
+  copykaro();
+  is.getRange(1,2).activate();
+  var i;
+  for (i=2 ; i<=51 ; i++) {
+    reset(i);
+  };
+ };
+
+function reset(n){
+  var ss=SpreadsheetApp.openByUrl('https://docs.google.com/spreadsheets/d/1N_wbQWD2Rl5DdHEcdynp-_yERSqLTMbtmAhpmUVQhX0/edit'); 
+  var is=ss.getSheetByName('Input File');
+  var sheetNo=is.getRange(n,5);
+  var sn=sheetNo.getValue();
+  var s=ss.getSheetByName(sn);
+  var delc=s.getMaxColumns()
+  var delr=s.getMaxRows();
+  s.clear();
+  if(delr>500){
+    s.deleteRows(500,delr-500);};
+  if(delc>26){
+    s.deleteColumns(26,delc-26);};
+};
+
+
+function getChats(n) {
+  var ss=SpreadsheetApp.openByUrl('https://docs.google.com/spreadsheets/d/1N_wbQWD2Rl5DdHEcdynp-_yERSqLTMbtmAhpmUVQhX0/edit'); 
+  var is=ss.getSheetByName('Input File');
+  var sheetNo=is.getRange(n,5);
+  var sn=sheetNo.getValue();
+  var s=ss.getSheetByName(sn);
+  var r=is.getRange(n,2);
+  var fileName = r.getValue();
+  var files = DriveApp.getFilesByName(fileName);
+  if (!files.hasNext()) {
+    throw new Error('No file with name:' + fileName);
+  }
+  
+  // We take only the first file among all files with such name.
+  
+  var file = files.next();
+  var lst1 = file.getBlob().getDataAsString('utf8').split('\n');
+  Logger.log(lst1);
+  var len=lst1.length;
+  if (len>500){
+    s.insertRowsAfter(500,len-500);
+  };
+  var i=0, row=2;
+  for (i in lst1) {
+    var range = s.getRange(row,1,1,1); //Instead of 3,4 -> lst1.length, ncols
+    range.setValue(lst1[i]);
+    Logger.log(lst1[i]);
+    row=row+1;
+  };
+  
+};
+
+function copykaro() {
+  var spreadsheet = SpreadsheetApp.openByUrl('https://docs.google.com/spreadsheets/d/1N_wbQWD2Rl5DdHEcdynp-_yERSqLTMbtmAhpmUVQhX0/edit');
+  spreadsheet.getRange('M3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet4!$U:$V,"Select *")');
+  spreadsheet.getRange('O3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet5!$U:$V,"Select *")');
+  spreadsheet.getRange('Q3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet6!$U:$V,"Select *")');
+  spreadsheet.getRange('S3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet6!$U:$V,"Select *")')
+  .setFormula('=Query(Sheet7!$U:$V,"Select *")');
+  spreadsheet.getRange('U3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet8!$U:$V,"Select *")');
+  spreadsheet.getRange('W3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet9!$U:$V,"Select *")');
+  spreadsheet.getRange('Y3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet10!$U:$V,"Select *")');
+  spreadsheet.getRange('AA3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet11!$U:$V,"Select *")');
+  spreadsheet.getRange('AC3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet12!$U:$V,"Select *")');
+  spreadsheet.getRange('AE3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet14!$U:$V,"Select *")')
+  .setFormula('=Query(Sheet13!$U:$V,"Select *")');
+  spreadsheet.getRange('AG3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet14!$U:$V,"Select *")');
+  spreadsheet.getRange('AI3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet15!$U:$V,"Select *")');
+  spreadsheet.getRange('AK3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet16!$U:$V,"Select *")');
+  spreadsheet.getRange('AM3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet17!$U:$V,"Select *")');
+  spreadsheet.getRange('AO3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet17!$U:$V,"Select *")')
+  .setFormula('=Query(Sheet18!$U:$V,"Select *")');
+  spreadsheet.getRange('AQ3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet19!$U:$V,"Select *")');
+  spreadsheet.getRange('AS3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet20!$U:$V,"Select *")');
+  spreadsheet.getRange('AU3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet21!$U:$V,"Select *")');
+  spreadsheet.getRange('AW3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet22!$U:$V,"Select *")');
+  spreadsheet.getRange('AY3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet23!$U:$V,"Select *")');
+  spreadsheet.getRange('AY4').activate();
+  spreadsheet.getRange('BA3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet24!$U:$V,"Select *")');
+  spreadsheet.getRange('BC3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet25!$U:$V,"Select *")');
+  spreadsheet.getRange('BE3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet26!$U:$V,"Select *")');
+  spreadsheet.getRange('BG3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet27!$U:$V,"Select *")');
+  spreadsheet.getRange('BI3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet28!$U:$V,"Select *")');
+  spreadsheet.getRange('BK3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet29!$U:$V,"Select *")');
+  spreadsheet.getRange('BM3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet30!$U:$V,"Select *")');
+  spreadsheet.getRange('BO3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet31!$U:$V,"Select *")');
+  spreadsheet.getRange('BQ3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet32!$U:$V,"Select *")');
+  spreadsheet.getRange('BS3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet33!$U:$V,"Select *")');
+  spreadsheet.getRange('BU3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet34!$U:$V,"Select *")');
+  spreadsheet.getRange('BW3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet35!$U:$V,"Select *")');
+  spreadsheet.getRange('CA3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet36!$U:$V,"Select *")');
+  spreadsheet.getRange('CC3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet37!$U:$V,"Select *")');
+  spreadsheet.getRange('CE3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet38!$U:$V,"Select *")');
+  spreadsheet.getRange('CG3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet39!$U:$V,"Select *")');
+  spreadsheet.getRange('CI3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet40!$U:$V,"Select *")');
+  spreadsheet.getRange('CK3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet42!$U:$V,"Select *")')
+  .setFormula('=Query(Sheet41!$U:$V,"Select *")');
+  spreadsheet.getRange('CM3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet42!$U:$V,"Select *")');
+ 
+  spreadsheet.getRange('CO3').activate()
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet43!$U:$V,"Select *")');
+  spreadsheet.getRange('CQ3').activate()
+    spreadsheet.getCurrentCell().setFormula('=Query(Sheet44!$U:$V,"Select *")');
+  spreadsheet.getRange('CS3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet45!$U:$V,"Select *")');
+    spreadsheet.getRange('CU3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet46!$U:$V,"Select *")');
+    spreadsheet.getRange('CW3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet47!$U:$V,"Select *")');
+    spreadsheet.getRange('CY3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet48!$U:$V,"Select *")');
+    spreadsheet.getRange('DA3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet49!$U:$V,"Select *")');
+    spreadsheet.getRange('DC3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet50!$U:$V,"Select *")');
+    spreadsheet.getRange('DE3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet51!$U:$V,"Select *")');
+  spreadsheet.getRange('DG3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet52!$U:$V,"Select *")');
+    spreadsheet.getRange('DI3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet53!$U:$V,"Select *")');
+  spreadsheet.getRange('DK3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet54!$U:$V,"Select *")');
+    spreadsheet.getRange('DM3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet55!$U:$V,"Select *")');
+  spreadsheet.getRange('DO3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet56!$U:$V,"Select *")');
+    spreadsheet.getRange('DQ3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet57!$U:$V,"Select *")');
+      spreadsheet.getRange('DS3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet58!$U:$V,"Select *")');
+  
+
+     spreadsheet.getRange('EM3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet4!$U:$W,"Select V,X")');
+  spreadsheet.getRange('EO3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet5!$U:$W,"Select V,X")');
+  spreadsheet.getRange('EQ3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet6!$U:$W,"Select V,X")');
+  spreadsheet.getRange('ES3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet6!$U:$W,"Select V,X")')
+  .setFormula('=Query(Sheet7!$U:$W,"Select V,X")');
+  spreadsheet.getRange('EU3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet8!$U:$W,"Select V,X")');
+  spreadsheet.getRange('EW3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet9!$U:$W,"Select V,X")');
+  spreadsheet.getRange('EY3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet10!$U:$W,"Select V,X")');
+  spreadsheet.getRange('FA3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet11!$U:$W,"Select V,X")');
+  spreadsheet.getRange('FC3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet12!$U:$W,"Select V,X")');
+  spreadsheet.getRange('FE3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet14!$U:$W,"Select V,X")')
+  .setFormula('=Query(Sheet13!$U:$W,"Select V,X")');
+  spreadsheet.getRange('FG3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet14!$U:$W,"Select V,X")');
+  spreadsheet.getRange('FI3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet15!$U:$W,"Select V,X")');
+  spreadsheet.getRange('FK3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet16!$U:$W,"Select V,X")');
+  spreadsheet.getRange('FM3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet17!$U:$W,"Select V,X")');
+  spreadsheet.getRange('FO3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet17!$U:$W,"Select V,X")')
+  .setFormula('=Query(Sheet18!$U:$W,"Select V,X")');
+  spreadsheet.getRange('FQ3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet19!$U:$W,"Select V,X")');
+  spreadsheet.getRange('FS3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet20!$U:$W,"Select V,X")');
+  spreadsheet.getRange('FU3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet21!$U:$W,"Select V,X")');
+  spreadsheet.getRange('FW3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet22!$U:$W,"Select V,X")');
+  spreadsheet.getRange('FY3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet23!$U:$W,"Select V,X")');
+  spreadsheet.getRange('GY4').activate();
+  spreadsheet.getRange('GA3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet24!$U:$W,"Select V,X")');
+  spreadsheet.getRange('GC3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet25!$U:$W,"Select V,X")');
+  spreadsheet.getRange('GE3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet26!$U:$W,"Select V,X")');
+  spreadsheet.getRange('GG3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet27!$U:$W,"Select V,X")');
+  spreadsheet.getRange('GI3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet28!$U:$W,"Select V,X")');
+  spreadsheet.getRange('GK3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet29!$U:$W,"Select V,X")');
+  spreadsheet.getRange('GM3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet30!$U:$W,"Select V,X")');
+  spreadsheet.getRange('GO3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet31!$U:$W,"Select V,X")');
+  spreadsheet.getRange('GQ3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet32!$U:$W,"Select V,X")');
+  spreadsheet.getRange('GS3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet33!$U:$W,"Select V,X")');
+  spreadsheet.getRange('GU3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet34!$U:$W,"Select V,X")');
+  spreadsheet.getRange('GW3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet35!$U:$W,"Select V,X")');
+  spreadsheet.getRange('HA3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet36!$U:$W,"Select V,X")');
+  spreadsheet.getRange('HC3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet37!$U:$W,"Select V,X")');
+  spreadsheet.getRange('HE3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet38!$U:$W,"Select V,X")');
+  spreadsheet.getRange('HG3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet39!$U:$W,"Select V,X")');
+  spreadsheet.getRange('HI3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet40!$U:$W,"Select V,X")');
+  spreadsheet.getRange('HK3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet42!$U:$W,"Select V,X")')
+  .setFormula('=Query(Sheet41!$U:$W,"Select V,X")');
+  spreadsheet.getRange('HM3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet42!$U:$W,"Select V,X")');
+ 
+  spreadsheet.getRange('HO3').activate()
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet43!$U:$W,"Select V,X")');
+  spreadsheet.getRange('HQ3').activate()
+    spreadsheet.getCurrentCell().setFormula('=Query(Sheet44!$U:$W,"Select V,X")');
+  spreadsheet.getRange('HS3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet45!$U:$W,"Select V,X")');
+    spreadsheet.getRange('HU3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet46!$U:$W,"Select V,X")');
+    spreadsheet.getRange('HW3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet47!$U:$W,"Select V,X")');
+    spreadsheet.getRange('HY3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet48!$U:$W,"Select V,X")');
+    spreadsheet.getRange('IA3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet49!$U:$W,"Select V,X")');
+    spreadsheet.getRange('IC3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet50!$U:$W,"Select V,X")');
+    spreadsheet.getRange('IE3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet51!$U:$W,"Select V,X")');
+  spreadsheet.getRange('IG3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet52!$U:$W,"Select V,X")');
+    spreadsheet.getRange('II3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet53!$U:$W,"Select V,X")');
+  spreadsheet.getRange('IK3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet54!$U:$W,"Select V,X")');
+    spreadsheet.getRange('IM3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet55!$U:$W,"Select V,X")');
+  spreadsheet.getRange('IO3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet56!$U:$W,"Select V,X")');
+    spreadsheet.getRange('IQ3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet57!$U:$W,"Select V,X")');
+      spreadsheet.getRange('IS3').activate();
+  spreadsheet.getCurrentCell().setFormula('=Query(Sheet58!$U:$W,"Select V,X")');
+};
+
+function ReportMaker(id,name) {
+  var spreadsheet = SpreadsheetApp.openById(id);
+  spreadsheet.getSheetByName(name).activate();
+  spreadsheet.getRange('A1:B2').activate();
+  spreadsheet.getActiveRangeList().setFontWeight('bold');
+  spreadsheet.getActiveSheet().autoResizeColumns(1, 1);
+  spreadsheet.getRange('A9').activate();
+  spreadsheet.getActiveRangeList().setFontWeight('bold');
+  spreadsheet.getRange('A10:B11').activate();
+  spreadsheet.getActiveRangeList().setFontWeight('bold');
+  spreadsheet.getActiveSheet().autoResizeColumns(1, 1);
+  spreadsheet.getRange('A13').activate();
+  spreadsheet.getActiveRangeList().setFontWeight('bold');
+  spreadsheet.getRange('A14:B14').activate();
+  spreadsheet.getActiveRangeList().setFontWeight('bold');
+  spreadsheet.getRange('A15:A19').activate();
+  var currentCell = spreadsheet.getCurrentCell();
+  spreadsheet.getSelection().getNextDataRange(SpreadsheetApp.Direction.DOWN).activate();
+  currentCell.activateAsCurrentCell();
+  currentCell = spreadsheet.getCurrentCell();
+  spreadsheet.getSelection().getNextDataRange(SpreadsheetApp.Direction.DOWN).activate();
+  currentCell.activateAsCurrentCell();
+  spreadsheet.getActiveRangeList().setFontWeight('bold');
+  spreadsheet.getCurrentCell().getNextDataCell(SpreadsheetApp.Direction.UP).activate();
+  spreadsheet.getRange('D14:F14').activate();
+  spreadsheet.getActiveRangeList().setFontWeight('bold');
+  spreadsheet.getRange('D15').activate();
+  spreadsheet.getCurrentCell().getNextDataCell(SpreadsheetApp.Direction.DOWN).activate();
+  spreadsheet.getCurrentCell().getNextDataCell(SpreadsheetApp.Direction.DOWN).activate();
+  spreadsheet.getCurrentCell().getNextDataCell(SpreadsheetApp.Direction.UP).activate();
+  spreadsheet.getCurrentCell().getNextDataCell(SpreadsheetApp.Direction.UP).activate();
+  spreadsheet.getRange('D15').activate();
+  currentCell = spreadsheet.getCurrentCell();
+  spreadsheet.getSelection().getNextDataRange(SpreadsheetApp.Direction.DOWN).activate();
+  currentCell.activateAsCurrentCell();
+  currentCell = spreadsheet.getCurrentCell();
+  spreadsheet.getSelection().getNextDataRange(SpreadsheetApp.Direction.DOWN).activate();
+  currentCell.activateAsCurrentCell();
+  spreadsheet.getActiveRangeList().setFontWeight('bold');
+  spreadsheet.getCurrentCell().getNextDataCell(SpreadsheetApp.Direction.UP).activate();
+  spreadsheet.getRange('D9:D12').activate();
+  spreadsheet.getActiveRangeList().setFontWeight('bold');
+  spreadsheet.getRange('E10:E12').activate();
+  spreadsheet.getActiveRangeList().setFontWeight('bold');
+  spreadsheet.getRange('H9:I13').activate();
+  spreadsheet.getActiveRangeList().setFontWeight('bold');
+  spreadsheet.getRange('H14:K14').activate();
+  spreadsheet.getActiveRangeList().setFontWeight('bold');
+  spreadsheet.getRange('H15:H17').activate();
+  currentCell = spreadsheet.getCurrentCell();
+  spreadsheet.getSelection().getNextDataRange(SpreadsheetApp.Direction.DOWN).activate();
+  currentCell.activateAsCurrentCell();
+  currentCell = spreadsheet.getCurrentCell();
+  spreadsheet.getSelection().getNextDataRange(SpreadsheetApp.Direction.DOWN).activate();
+  currentCell.activateAsCurrentCell();
+  spreadsheet.getActiveRangeList().setFontWeight('bold');
+  spreadsheet.getCurrentCell().getNextDataCell(SpreadsheetApp.Direction.UP).activate();
+  spreadsheet.getRange('L9').activate();
+  spreadsheet.getActiveRangeList().setFontWeight('bold');
+  spreadsheet.getRange('L10:M10').activate();
+  spreadsheet.getActiveRangeList().setFontWeight('bold');
+  spreadsheet.getRange('L11').activate();
+  currentCell = spreadsheet.getCurrentCell();
+  spreadsheet.getSelection().getNextDataRange(SpreadsheetApp.Direction.DOWN).activate();
+  currentCell.activateAsCurrentCell();
+  spreadsheet.getActiveRangeList().setFontWeight('bold');
+  currentCell = spreadsheet.getCurrentCell();
+  spreadsheet.getSelection().getNextDataRange(SpreadsheetApp.Direction.DOWN).activate();
+  currentCell.activateAsCurrentCell();
+  spreadsheet.getActiveRangeList().setFontWeight(null);
+  spreadsheet.getCurrentCell().getNextDataCell(SpreadsheetApp.Direction.UP).activate();
+  spreadsheet.getRange('L11').activate();
+  currentCell = spreadsheet.getCurrentCell();
+  spreadsheet.getSelection().getNextDataRange(SpreadsheetApp.Direction.DOWN).activate();
+  currentCell.activateAsCurrentCell();
+  spreadsheet.getCurrentCell().getNextDataCell(SpreadsheetApp.Direction.DOWN).activate();
+  spreadsheet.getRange('L11').activate();
+  currentCell = spreadsheet.getCurrentCell();
+  spreadsheet.getSelection().getNextDataRange(SpreadsheetApp.Direction.DOWN).activate();
+  currentCell.activateAsCurrentCell();
+  currentCell = spreadsheet.getCurrentCell();
+  spreadsheet.getSelection().getNextDataRange(SpreadsheetApp.Direction.DOWN).activate();
+  currentCell.activateAsCurrentCell();
+  spreadsheet.getActiveRangeList().setFontWeight('bold');
+  spreadsheet.getCurrentCell().getNextDataCell(SpreadsheetApp.Direction.UP).activate();
+  spreadsheet.getRange('N9:O11').activate();
+  spreadsheet.getActiveRangeList().setFontWeight('bold');
+  spreadsheet.getRange('N14:Q14').activate();
+  spreadsheet.getActiveRangeList().setFontWeight('bold');
+  spreadsheet.getRange('N15').activate();
+  currentCell = spreadsheet.getCurrentCell();
+  spreadsheet.getSelection().getNextDataRange(SpreadsheetApp.Direction.DOWN).activate();
+  currentCell.activateAsCurrentCell();
+  currentCell = spreadsheet.getCurrentCell();
+  spreadsheet.getSelection().getNextDataRange(SpreadsheetApp.Direction.DOWN).activate();
+  currentCell.activateAsCurrentCell();
+  spreadsheet.getActiveRangeList().setFontWeight('bold');
+  spreadsheet.getCurrentCell().getNextDataCell(SpreadsheetApp.Direction.UP).activate();
+  spreadsheet.getRange('G2:G5').activate();
+  spreadsheet.getActiveRangeList().setNumberFormat('0.00%');
+  spreadsheet.getRange('B15:B20').activate();
+  spreadsheet.getActiveRangeList().setNumberFormat('HH:mm:ss');
+  spreadsheet.getRange('B15').activate();
+  currentCell = spreadsheet.getCurrentCell();
+  spreadsheet.getSelection().getNextDataRange(SpreadsheetApp.Direction.DOWN).activate();
+  currentCell.activateAsCurrentCell();
+  currentCell = spreadsheet.getCurrentCell();
+  spreadsheet.getSelection().getNextDataRange(SpreadsheetApp.Direction.DOWN).activate();
+  currentCell.activateAsCurrentCell();
+  spreadsheet.getActiveRangeList().setNumberFormat('HH:mm:ss');
+  spreadsheet.getCurrentCell().getNextDataCell(SpreadsheetApp.Direction.UP).activate();
+  spreadsheet.getRange('E15:F15').activate();
+  spreadsheet.getCurrentCell().getNextDataCell(SpreadsheetApp.Direction.DOWN).activate();
+  spreadsheet.getRange('E15:F15').activate();
+  currentCell = spreadsheet.getCurrentCell();
+  spreadsheet.getSelection().getNextDataRange(SpreadsheetApp.Direction.DOWN).activate();
+  currentCell.activateAsCurrentCell();
+  currentCell = spreadsheet.getCurrentCell();
+  spreadsheet.getSelection().getNextDataRange(SpreadsheetApp.Direction.DOWN).activate();
+  currentCell.activateAsCurrentCell();
+  spreadsheet.getActiveRangeList().setNumberFormat('HH:mm:ss');
+  spreadsheet.getCurrentCell().getNextDataCell(SpreadsheetApp.Direction.UP).activate();
+  spreadsheet.getRange('I15:K15').activate();
+  currentCell = spreadsheet.getCurrentCell();
+  spreadsheet.getSelection().getNextDataRange(SpreadsheetApp.Direction.DOWN).activate();
+  currentCell.activateAsCurrentCell();
+  currentCell = spreadsheet.getCurrentCell();
+  spreadsheet.getSelection().getNextDataRange(SpreadsheetApp.Direction.DOWN).activate();
+  currentCell.activateAsCurrentCell();
+  spreadsheet.getActiveRangeList().setNumberFormat('HH:mm:ss');
+  spreadsheet.getCurrentCell().getNextDataCell(SpreadsheetApp.Direction.UP).activate();
+  spreadsheet.getRange('M11').activate();
+  spreadsheet.getCurrentCell().getNextDataCell(SpreadsheetApp.Direction.DOWN).activate();
+  spreadsheet.getRange('M11').activate();
+  currentCell = spreadsheet.getCurrentCell();
+  spreadsheet.getSelection().getNextDataRange(SpreadsheetApp.Direction.DOWN).activate();
+  currentCell.activateAsCurrentCell();
+  currentCell = spreadsheet.getCurrentCell();
+  spreadsheet.getSelection().getNextDataRange(SpreadsheetApp.Direction.DOWN).activate();
+  currentCell.activateAsCurrentCell();
+  spreadsheet.getActiveRangeList().setNumberFormat('HH:mm:ss');
+  spreadsheet.getCurrentCell().getNextDataCell(SpreadsheetApp.Direction.UP).activate();
+  spreadsheet.getRange('Q15').activate();
+  currentCell = spreadsheet.getCurrentCell();
+  spreadsheet.getSelection().getNextDataRange(SpreadsheetApp.Direction.DOWN).activate();
+  currentCell.activateAsCurrentCell();
+  currentCell = spreadsheet.getCurrentCell();
+  spreadsheet.getSelection().getNextDataRange(SpreadsheetApp.Direction.DOWN).activate();
+  currentCell.activateAsCurrentCell();
+  currentCell = spreadsheet.getCurrentCell();
+  spreadsheet.getSelection().getNextDataRange(SpreadsheetApp.Direction.DOWN).activate();
+  currentCell.activateAsCurrentCell();
+  currentCell = spreadsheet.getCurrentCell();
+  spreadsheet.getSelection().getNextDataRange(SpreadsheetApp.Direction.DOWN).activate();
+  currentCell.activateAsCurrentCell();
+  spreadsheet.getActiveRangeList().setNumberFormat('HH:mm:ss');
+  spreadsheet.getCurrentCell().getNextDataCell(SpreadsheetApp.Direction.UP).activate();
+  spreadsheet.getRange('O15:P16').activate();
+  currentCell = spreadsheet.getCurrentCell();
+  spreadsheet.getSelection().getNextDataRange(SpreadsheetApp.Direction.DOWN).activate();
+  currentCell.activateAsCurrentCell();
+  currentCell = spreadsheet.getCurrentCell();
+  spreadsheet.getSelection().getNextDataRange(SpreadsheetApp.Direction.DOWN).activate();
+  currentCell.activateAsCurrentCell();
+  spreadsheet.getActiveRangeList().setNumberFormat('dd/MM/yyyy');
+  spreadsheet.getCurrentCell().getNextDataCell(SpreadsheetApp.Direction.UP).activate();
+  spreadsheet.getRange('O11').activate();
+  spreadsheet.getActiveRangeList().setNumberFormat('HH:mm:ss');
+  spreadsheet.getRange('I11:I13').activate();
+  spreadsheet.getActiveRangeList().setNumberFormat('HH:mm:ss');
+  spreadsheet.getRange('E11:E12').activate();
+  spreadsheet.getActiveRangeList().setNumberFormat('HH:mm:ss');
+  spreadsheet.getRange('B11').activate();
+  spreadsheet.getActiveRangeList().setNumberFormat('HH:mm:ss');
+  spreadsheet.getRange('B1').activate();
+  spreadsheet.getActiveRangeList().setNumberFormat('dd/MM/yyyy');
+  spreadsheet.getRange('E1').activate();
+  spreadsheet.getActiveRangeList().setNumberFormat('0.0000000000')
+  .setNumberFormat('0.000000000')
+  .setNumberFormat('0.0000000000')
+  .setNumberFormat('0.000000000')
+  .setNumberFormat('0.00000000')
+  .setNumberFormat('0.000000000')
+  .setNumberFormat('HH:mm:ss')
+  .setFontWeight('bold');
+  spreadsheet.getRange('D1').activate();
+  spreadsheet.getActiveRangeList().setFontWeight('bold');
+  spreadsheet.getRange('F1:F5').activate();
+  spreadsheet.getActiveRangeList().setFontWeight('bold');
+  spreadsheet.getRange('G2:G5').activate();
+  var sheet = spreadsheet.getActiveSheet();
+  var chart = sheet.newChart()
+  .asColumnChart()
+  .addRange(spreadsheet.getRange('G2:G5'))
+  .setMergeStrategy(Charts.ChartMergeStrategy.MERGE_COLUMNS)
+  .setTransposeRowsAndColumns(false)
+  .setNumHeaders(-1)
+  .setHiddenDimensionStrategy(Charts.ChartHiddenDimensionStrategy.IGNORE_BOTH)
+  .setPosition(3, 2, 74, 19)
+  .build();
+  sheet.insertChart(chart);
+  var charts = sheet.getCharts();
+  chart = charts[charts.length - 1];
+  sheet.removeChart(chart);
+  chart = sheet.newChart()
+  .asPieChart()
+  .addRange(spreadsheet.getRange('G2:G5'))
+  .setMergeStrategy(Charts.ChartMergeStrategy.MERGE_COLUMNS)
+  .setTransposeRowsAndColumns(false)
+  .setNumHeaders(-1)
+  .setHiddenDimensionStrategy(Charts.ChartHiddenDimensionStrategy.IGNORE_BOTH)
+  .set3D()
+  .setPosition(3, 2, 74, 19)
+  .build();
+  sheet.insertChart(chart);
+  spreadsheet.getRange('F2:F5').activate();
+  charts = sheet.getCharts();
+  chart = charts[charts.length - 1];
+  sheet.removeChart(chart);
+  chart = sheet.newChart()
+  .asPieChart()
+  .addRange(spreadsheet.getRange('F2:G5'))
+  .setMergeStrategy(Charts.ChartMergeStrategy.MERGE_COLUMNS)
+  .setTransposeRowsAndColumns(false)
+  .setNumHeaders(-1)
+  .setHiddenDimensionStrategy(Charts.ChartHiddenDimensionStrategy.IGNORE_BOTH)
+  .setOption('useFirstColumnAsDomain', true)
+  .set3D()
+  .setPosition(3, 2, 74, 19)
+  .build();
+  sheet.insertChart(chart);
+  charts = sheet.getCharts();
+  chart = charts[charts.length - 1];
+  sheet.removeChart(chart);
+  chart = sheet.newChart()
+  .asPieChart()
+  .addRange(spreadsheet.getRange('F2:G5'))
+  .setMergeStrategy(Charts.ChartMergeStrategy.MERGE_COLUMNS)
+  .setTransposeRowsAndColumns(false)
+  .setNumHeaders(-1)
+  .setHiddenDimensionStrategy(Charts.ChartHiddenDimensionStrategy.IGNORE_BOTH)
+  .setOption('useFirstColumnAsDomain', true)
+  .set3D()
+  .setPosition(3, 2, 74, 19)
+  .build();
+  sheet.insertChart(chart);
+  charts = sheet.getCharts();
+  chart = charts[charts.length - 1];
+  sheet.removeChart(chart);
+  chart = sheet.newChart()
+  .asPieChart()
+  .addRange(spreadsheet.getRange('F2:G5'))
+  .setMergeStrategy(Charts.ChartMergeStrategy.MERGE_COLUMNS)
+  .setTransposeRowsAndColumns(false)
+  .setNumHeaders(-1)
+  .setHiddenDimensionStrategy(Charts.ChartHiddenDimensionStrategy.IGNORE_BOTH)
+  .setOption('useFirstColumnAsDomain', true)
+  .set3D()
+  .setOption('height', 179)
+  .setOption('width', 290)
+  .setPosition(13, 2, 75, 3)
+  .build();
+  sheet.insertChart(chart);
+  charts = sheet.getCharts();
+  chart = charts[charts.length - 1];
+  sheet.removeChart(chart);
+  chart = sheet.newChart()
+  .asPieChart()
+  .addRange(spreadsheet.getRange('F2:G5'))
+  .setMergeStrategy(Charts.ChartMergeStrategy.MERGE_COLUMNS)
+  .setTransposeRowsAndColumns(false)
+  .setNumHeaders(-1)
+  .setHiddenDimensionStrategy(Charts.ChartHiddenDimensionStrategy.IGNORE_BOTH)
+  .setOption('useFirstColumnAsDomain', true)
+  .set3D()
+  .setOption('height', 179)
+  .setOption('width', 290)
+  .setPosition(1, 9, 1, 0)
+  .build();
+  sheet.insertChart(chart);
+  spreadsheet.getRange('K14').activate();
+  charts = sheet.getCharts();
+  chart = charts[charts.length - 1];
+  sheet.removeChart(chart);
+  chart = sheet.newChart()
+  .asPieChart()
+  .addRange(spreadsheet.getRange('F2:G5'))
+  .setMergeStrategy(Charts.ChartMergeStrategy.MERGE_COLUMNS)
+  .setTransposeRowsAndColumns(false)
+  .setNumHeaders(-1)
+  .setHiddenDimensionStrategy(Charts.ChartHiddenDimensionStrategy.IGNORE_BOTH)
+  .setOption('useFirstColumnAsDomain', true)
+  .set3D()
+  .setOption('height', 157)
+  .setOption('width', 290)
+  .setPosition(1, 9, 1, 0)
+  .build();
+  sheet.insertChart(chart);
+  spreadsheet.getRange('A9:C55').activate();
+  spreadsheet.getActiveRangeList().setBackground('#f9cb9c');
+  spreadsheet.getRange('D9:G55').activate();
+  spreadsheet.getActiveRangeList().setBackground('#a4c2f4');
+  spreadsheet.getRange('H9:K55').activate();
+  spreadsheet.getActiveRangeList().setBackground('#d5a6bd');
+  spreadsheet.getRange('K9:L55').activate();
+  spreadsheet.getActiveRangeList().setBackground('#d5a6bd');
+  spreadsheet.getRange('M9:N28').activate();
+  spreadsheet.getActiveRangeList().setBackground('#b6d7a8');
+  spreadsheet.getRange('O9:S55').activate();
+  spreadsheet.getActiveRangeList().setBackground('#b6d7a8')
+  .setBackground('#ffd966');
+  spreadsheet.getRange('T9:V55').activate();
+  spreadsheet.getActiveRangeList().setBackground('#00ffff');
+  spreadsheet.getRange('F2:G5').activate();
+  spreadsheet.getActiveRangeList().setBackground('#f6b26b');
+  spreadsheet.getRange('G14').activate();
+  spreadsheet.getActiveRangeList().setFontWeight('bold');
+  spreadsheet.getRange('C14').activate();
+  spreadsheet.getActiveRangeList().setFontWeight('bold');
+  spreadsheet.getRange('R14').activate();
+  spreadsheet.getActiveRangeList().setFontWeight('bold');
+  spreadsheet.getRange('S14').activate();
+  spreadsheet.getActiveRangeList().setFontWeight('bold');
+  spreadsheet.getRange('T9:V9').activate();
+  spreadsheet.getActiveRangeList().setFontWeight('bold');
+  spreadsheet.getRange('Q:Q').activate();
+  spreadsheet.setCurrentCell(spreadsheet.getRange('Q5'));
+  spreadsheet.getActiveRangeList().setNumberFormat('d"-"mmm"-"yyyy');
+  spreadsheet.getRange('P:P').activate();
+  spreadsheet.setCurrentCell(spreadsheet.getRange('P5'));
+  spreadsheet.getActiveRangeList().setNumberFormat('d"-"mmm"-"yyyy');
+  spreadsheet.getRange('P10:P11').activate();
+  spreadsheet.getActiveRangeList().setNumberFormat('#,##0.00');
+  spreadsheet.getRange('P10').activate();
+  spreadsheet.getActiveRangeList().setNumberFormat('@')
+  .setNumberFormat('General');
+  spreadsheet.getRange('P11').activate();
+  spreadsheet.getActiveRangeList().setNumberFormat('[h]:mm:ss');
+  spreadsheet.getRange('O17').activate();
+  spreadsheet.getRange('M16').activate();
+};
+
+function email(sid,emailid1,emailid2){
+var file = DriveApp.getFilesByName('ReportSat Jul 06 2019 16:07:05 GMT+0530 (IST)');
+var dt=new Date;
+  var mon=dt.getMonth()+1
+  GmailApp.sendEmail(emailid1, 'Nidhi team Report for date'+" "+dt.getDate()+"-"+mon+"-"+dt.getYear(), 'Please see the attached file at following link https://docs.google.com/spreadsheets/d/'+sid);
+  GmailApp.sendEmail(emailid2, 'Nidhi team Report for date'+" "+dt.getDate()+"-"+mon+"-"+dt.getYear(), 'Please see the attached file at following link https://docs.google.com/spreadsheets/d/'+sid);
+  GmailApp.sendEmail('avreen@anhadedutrain.com', 'Nidhi and Arindam team Report for date'+" "+dt.getDate()+"-"+mon+"-"+dt.getYear(), 'Please see the attached file at following link https://docs.google.com/spreadsheets/d/'+sid);
+  GmailApp.sendEmail('jyotishman@edoofa.com', 'Nidhi and Arindam team Report for date'+" "+dt.getDate()+"-"+mon+"-"+dt.getYear(), 'Please see the attached file at following link https://docs.google.com/spreadsheets/d/'+sid);
+};
+
+
+
