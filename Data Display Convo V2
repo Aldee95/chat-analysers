@@ -1,0 +1,456 @@
+function noticer() {
+  var ss=SpreadsheetApp.openById('1FBbEUzG8TeddZ-r0tJXbxF2B-5phXVTJWp-7hePP1aM')
+  var sheets=ss.getSheets()
+  var corr_arr=[]
+  for (i=0;i<sheets.length;i++){
+    var sheet=sheets[i]
+    var sheet_name=sheet.getName()
+
+    if (sheet_name.substr(sheet_name.length-4,4)=='Coun'){
+      Logger.log(sheet_name)
+      var obj={sheet_n:sheet_name,array:[],count:0,}
+      var vals=sheet.getRange(1,3,722,sheet.getLastColumn()-2).getValues()
+      const limit=(sheet.getLastColumn()-2)/3
+      for (j=0;j<limit;j++){
+        var col=(j*3)+1;
+        
+        for (k=2;k<722;k++){
+          if(vals[k][col]>0){
+            var point={row:k+1,col:col+3}
+            obj.array.push(point)
+            obj.count=obj.count+1
+          }
+        }
+      }
+      corr_arr.push(obj)
+    }
+  }
+  
+  return corr_arr
+}
+
+function data_collector(){
+  var ss=SpreadsheetApp.openById('1FBbEUzG8TeddZ-r0tJXbxF2B-5phXVTJWp-7hePP1aM')
+  var arr=noticer()
+  
+  var dc_arr=[]
+  for (i=0;i<arr.length;i++){
+    var sheet=ss.getSheetByName(arr[i].sheet_n)
+    var sheet_name=sheet.getName().split(" ")
+    var sheet_m=ss.getSheetByName(sheet_name[0].concat(' Lead'))
+    var coun=sheet_name[0]
+    
+    for (j=0;j<arr[i].count;j++){
+      var lead=sheet.getRange(1,arr[i].array[j].col+1).getValue().split(' ')
+      var lead_name=lead[0]
+      var anno=sheet.getRange(arr[i].array[j].row,arr[i].array[j].col+1).getValue()
+      var time=sheet.getRange(arr[i].array[j].row,1).getValue()
+      var on=ongoing(sheet_m,arr[i].array[j].row-5)
+      var final_text=on.text.concat('\n',anno)
+      var obj={time:time,text:final_text,coun:coun,lead:lead_name,count:on.count}
+      dc_arr.push(obj)      
+      }
+  }
+  return dc_arr
+}
+function ongoing(sheet,row){
+  Logger.log(sheet.getName())
+  Logger.log(row)
+  var ss=SpreadsheetApp.openById('1FBbEUzG8TeddZ-r0tJXbxF2B-5phXVTJWp-7hePP1aM')
+  var onarr=[]
+  Logger.log(Math.min(15,720-row-1))
+  var vals=sheet.getRange(Math.max(row-10,1),3,Math.min(15,720-row),sheet.getLastColumn()-2).getValues()
+  Logger.log(vals)
+  const lim=(sheet.getLastColumn()-2)/3
+  for (m=0;m<lim;m++){
+    var col=(m*3);
+    
+        for (k=0;k<Math.min(15,720-row);k++){
+          if(vals[k][col]>0){
+            
+            var lead=sheet.getRange(1,col+3).getValue().split(' ')
+            var lead_name=lead[0]
+            onarr.push(lead_name)
+            break;
+            }
+        }
+  }
+  var text='Ongoing Leads: '
+  for (l=0;l<onarr.length;l++){
+    text=text.concat(onarr[l]," ,")
+  }
+  var objon={text:text,count:onarr.length}
+  return objon
+}
+
+function kalam(dc_array){
+  var ss=SpreadsheetApp.openById('1FBbEUzG8TeddZ-r0tJXbxF2B-5phXVTJWp-7hePP1aM')
+  var sheet=ss.getSheetByName('CP data')
+  const rows=sheet.getRange(1,26).getValue()
+  var vals=sheet.getRange(1,1,1000,5).getValues()
+  for (i=0;i<dc_array.length;i++){
+    vals[i+rows][0]=dc_array[i].coun
+    vals[i+rows][1]=dc_array[i].lead
+    vals[i+rows][2]=dc_array[i].time
+    vals[i+rows][3]=dc_array[i].text
+    vals[i+rows][4]=dc_array[i].count
+  }
+  sheet.getRange(1,1,1000,5).setValues(vals)
+  sheet.getRange(1,3,1000,1).setNumberFormat('hh:mm');
+}
+
+  
+function executor(){
+  var dc_array=data_collector()
+  
+  kalam(dc_array)
+}
+function deleter(){
+  var ss=SpreadsheetApp.openById('1FBbEUzG8TeddZ-r0tJXbxF2B-5phXVTJWp-7hePP1aM')
+  var sheets=ss.getSheets()
+  for (i=0;i<sheets.length;i++){
+    var sheet_name=sheets[i].getName()
+    if (sheet_name.substr(sheet_name.length-4,4)=='Coun' || sheet_name.substr(sheet_name.length-4,4)=='Lead'){
+      sheets[i].getParent().deleteSheet(sheets[i])
+    }
+  }
+  
+}
+
+function data_displayer(){
+  var ss=SpreadsheetApp.openById('1FBbEUzG8TeddZ-r0tJXbxF2B-5phXVTJWp-7hePP1aM')
+  var dbsheet=ss.getSheetByName('Dashboard')
+  var coun=dbsheet.getRange(23,2).getValue()
+  
+  }
+function chat_fetch(){
+  var ss=SpreadsheetApp.openById('1FBbEUzG8TeddZ-r0tJXbxF2B-5phXVTJWp-7hePP1aM')
+  var dbsheet=ss.getSheetByName('Dashboard')
+  var coun=dbsheet.getRange(23,2).getValue()
+  var kysheet=ss.getSheetByName('Key')
+  try {
+    var dtsheet=ss.getSheetByName(coun.concat(' Coun'))
+    var col=(dtsheet.getLastColumn()-2)/3
+    
+  }
+  catch (err) {  
+    throw 'No chats for this counsellor'
+    return
+  }
+  
+
+
+  Logger.log(col)
+  var array=[]
+  for (i=1;i<(col)+1;i++){
+    Logger.log(i)
+    var lead=dtsheet.getRange(1,2+(3*i)).getValue().split(' ',1)
+    array.push(lead[0])
+    Logger.log(lead)
+  }
+  for(j=0;j<array.length;j++){
+    kysheet.getRange(j+1,1).setValue(array[j])
+    kysheet.getRange(j+1,2).setValue(j+1)
+  }
+  remove_all()
+  include_all()
+}
+  
+  
+function include_all(){
+   var ss=SpreadsheetApp.openById('1FBbEUzG8TeddZ-r0tJXbxF2B-5phXVTJWp-7hePP1aM')
+  var dbsheet=ss.getSheetByName('Dashboard')
+  
+  var kysheet=ss.getSheetByName('Key')
+  dbsheet.getRange(23,8,70,1).clear()
+  var k=1
+  while(kysheet.getRange(k,1).getValue()!='' && kysheet.getRange(k,1).getValue()!=null){
+    
+    k++;
+  }
+  dbsheet.getRange(23,8,k,1).setValues(kysheet.getRange(1,1,k,1).getValues())
+}
+  
+  
+function remove_all(){
+  var ss=SpreadsheetApp.openById('1FBbEUzG8TeddZ-r0tJXbxF2B-5phXVTJWp-7hePP1aM')
+  var dbsheet=ss.getSheetByName('Dashboard')
+  
+  dbsheet.getRange(23,8,50,1).clear()
+  
+}
+  
+function include_this(){
+  var ss=SpreadsheetApp.openById('1FBbEUzG8TeddZ-r0tJXbxF2B-5phXVTJWp-7hePP1aM')
+  var dbsheet=ss.getSheetByName('Dashboard')
+  var name=dbsheet.getRange(23,5).getValue()
+  for (k=0;k<50;)
+  {
+    if(dbsheet.getRange(k+23,8).getValue()!='' && dbsheet.getRange(k+23,8).getValue()!=null)
+    {k++;}
+    else
+    {dbsheet.getRange(k+23,8).setValue(name)
+    return}
+  }
+  
+  
+}
+  
+function remove_this(){
+  var ss=SpreadsheetApp.openById('1FBbEUzG8TeddZ-r0tJXbxF2B-5phXVTJWp-7hePP1aM')
+  var dbsheet=ss.getSheetByName('Dashboard')
+ 
+  const row=dbsheet.getActiveCell().getRow()
+  const col=dbsheet.getActiveCell().getColumn()
+  
+  /*if(col!=8){
+    throw 'This operation can only be used in H column from row 23'
+    return
+  }*/
+  dbsheet.getRange(row,col).clear()
+  dbsheet.getRange(row,8,50,1).setValues(dbsheet.getRange(row+1,8,50,1).getValues())
+}
+
+function data_maker(){
+  var ss=SpreadsheetApp.openById('1FBbEUzG8TeddZ-r0tJXbxF2B-5phXVTJWp-7hePP1aM')
+  var dbsheet=ss.getSheetByName('Dashboard')
+  var kysheet=ss.getSheetByName('Key')
+  var dsheet=ss.getSheetByName('Data_c')
+  var coun=dbsheet.getRange(23,2).getValue()
+  Logger.log(coun)
+  var array=[]
+  var vals=kysheet.getRange(1,1,60,2).getValues()
+  var k=23
+  while(dbsheet.getRange(k,8).getValue()!='' && dbsheet.getRange(k,8).getValue()!=null){
+    Logger.log('Yes')
+    var name=dbsheet.getRange(k,8).getValue()
+    for (i=0;i<60;i++){
+      if(vals[i][0]==name){
+        Logger.log('Yess')
+        var temp={name:name,col:vals[i][1]}
+        array.push(temp)
+        break
+      }
+    }
+    k++;
+  }
+  Logger.log(array)
+  return array
+}
+      
+function data_taker(){
+  var ss=SpreadsheetApp.openById('1FBbEUzG8TeddZ-r0tJXbxF2B-5phXVTJWp-7hePP1aM')
+  var dbsheet=ss.getSheetByName('Dashboard')
+  var kysheet=ss.getSheetByName('Key')
+  var dsheet=ss.getSheetByName('Data_c')
+  var lsheet=ss.getSheetByName('Data_l')
+  var coun=dbsheet.getRange(23,2).getValue()
+  var array=data_maker()
+  var sheet=ss.getSheetByName(coun.concat(' Coun'))
+  kysheet.getRange(1,7,100,3).clear()
+  var valpad=kysheet.getRange(1,7,100,3).getValues()
+  for (l=0;l<array.length;l++){
+    dsheet.getRange(1,(3*l)+3,721,3).setValues(sheet.getRange(1,(3*array[l].col),721,3).getValues())
+    
+    valpad[l][0]=array[l].name
+    valpad[l][1]=array[l].col
+    valpad[l][2]=l+1
+    
+  }
+  kysheet.getRange(1,7,100,3).setValues(valpad)
+  var ldsheet=ss.getSheetByName(coun.concat(' Lead'))
+  for (y=0;y<array.length;y++){
+    lsheet.getRange(1,(3*y)+3,721,3).setValues(ldsheet.getRange(1,(3*array[y].col),721,3).getValues())
+    
+  }
+}
+    
+
+function chat_only(){
+  var ss=SpreadsheetApp.openById('1FBbEUzG8TeddZ-r0tJXbxF2B-5phXVTJWp-7hePP1aM')
+  var dsheet=ss.getSheetByName('Data_c')
+  var dbsheet=ss.getSheetByName('Dashboard')
+  var kysheet=ss.getSheetByName('Key')
+  var arr
+  var m=1
+  var chat=dbsheet.getRange(23,10).getValue()
+  while(kysheet.getRange(m,7).getValue()!='' && kysheet.getRange(m,7).getValue()!=null){
+    if(kysheet.getRange(m,7).getValue()==chat){
+      arr=kysheet.getRange(m,9).getValue()
+    }
+    m++
+  }
+  Logger.log(arr)
+  var obj=time_determiner(arr)
+  Logger.log(obj)
+  chart_builder(obj,arr)
+}
+
+function time_determiner(arr){
+  var ss=SpreadsheetApp.openById('1FBbEUzG8TeddZ-r0tJXbxF2B-5phXVTJWp-7hePP1aM')
+  var dsheet=ss.getSheetByName('Data_c')
+  var dbsheet=ss.getSheetByName('Dashboard')
+  var kysheet=ss.getSheetByName('Key')
+  var vals=dsheet.getRange(2,3*arr,720,1).getValues()
+  Logger.log(vals)
+  var arrSum=vals.reduce(add)
+  Logger.log(arrSum)
+  if(arrSum<600){
+    var t_start=2
+    var t_end=721
+    var tobj={ts:t_start,te:t_end}
+    }
+  else{
+    Logger.log('Yes')
+    var sum=0
+    for (n=0;n<720;n++){
+      sum=sum+vals[n][0];
+
+      
+      if(sum>80){
+        var t_start=n
+        break;
+      }
+    }
+    var osum=0
+    for (o=719;o>0;o--){
+      osum=osum+vals[o][0];
+      if(osum>80){
+        var t_end=o
+        break;
+      }
+    }
+    var tobj={ts:t_start,te:t_end}
+    }
+  return tobj
+}
+
+function chart_builder(obj,arr){
+  var ss=SpreadsheetApp.openById('1FBbEUzG8TeddZ-r0tJXbxF2B-5phXVTJWp-7hePP1aM')
+  var dsheet=ss.getSheetByName('Data_c')
+  var lsheet=ss.getSheetByName('Data_l')
+  var dbsheet=ss.getSheetByName('Dashboard')
+  var kysheet=ss.getSheetByName('Key')
+  var charts=dbsheet.getCharts()
+  var chart=charts[0]
+  var ranges=chart.getRanges()
+  Logger.log(ranges[0].getSheet().getName())
+  for(x=0;x<ranges.length;x++){
+    chart=chart.modify().removeRange(ranges[x]).build()
+  }
+  dbsheet.updateChart(chart)
+  Logger.log(ranges[0].getSheet().getName())
+  Logger.log(ranges.length)
+  chart=chart.modify().addRange(dsheet.getRange(obj.ts,1,obj.te-obj.ts,1))
+  .addRange(dsheet.getRange(obj.ts,arr*3,obj.te-obj.ts,1))
+  .addRange(lsheet.getRange(obj.ts,arr*3,obj.te-obj.ts,1))
+  .asColumnChart().setStacked()
+  .build()
+  dbsheet.updateChart(chart)
+}
+
+function chart_builder_cp(){
+  var ss=SpreadsheetApp.openById('1FBbEUzG8TeddZ-r0tJXbxF2B-5phXVTJWp-7hePP1aM')
+  var dsheet=ss.getSheetByName('Data_c')
+  var lsheet=ss.getSheetByName('Data_l')
+  var dbsheet=ss.getSheetByName('Dashboard')
+  var kysheet=ss.getSheetByName('Key')
+  var cpsheet=ss.getSheetByName('CP Data')
+  var charts=dbsheet.getCharts()
+  var chart=charts[0]
+  var ranges=chart.getRanges()
+  Logger.log(ranges[0].getSheet().getName())
+  for(x=0;x<ranges.length;x++){
+    chart=chart.modify().removeRange(ranges[x]).build()
+  }
+  dbsheet.updateChart(chart)
+  Logger.log(ranges[0].getSheet().getName())
+  Logger.log(ranges.length)
+  
+  
+  
+  
+chart = chart.modify()
+  .asColumnChart()
+  .addRange(cpsheet.getRange('\'CP data\'!A1:A1000'))
+  .setMergeStrategy(Charts.ChartMergeStrategy.MERGE_COLUMNS)
+  .setTransposeRowsAndColumns(false)
+  .setNumHeaders(1)
+  .setHiddenDimensionStrategy(Charts.ChartHiddenDimensionStrategy.IGNORE_BOTH)
+  .setOption('applyAggregateData', 0)
+  .setOption('bubble.stroke', '#000000')
+  .setOption('useFirstColumnAsDomain', false)
+  .setOption('isStacked', 'false')
+  .setOption('annotations.domain.textStyle.color', '#808080')
+  .setOption('textStyle.color', '#000000')
+  .setOption('legend.textStyle.color', '#191919')
+  .setOption('titleTextStyle.color', '#757575')
+  .setOption('annotations.total.textStyle.color', '#808080')
+  .setOption('hAxis.textStyle.color', '#000000')
+  .setOption('hAxis.titleTextStyle.color', '#000000')
+  .setOption('vAxes.0.textStyle.color', '#000000')
+  .setOption('series.0.aggregateFunction', 'sum')
+  .setOption('height', 385)
+  .setOption('width', 1241)
+  .setPosition(1, 1, 5, 2)
+  .build();
+  
+  
+  
+  
+  
+  dbsheet.updateChart(chart)
+}
+
+
+
+function add(a,b){
+  return Number(a)+Number(b[0]);
+}
+    
+      
+function chats_only(){
+  var ss=SpreadsheetApp.openById('1FBbEUzG8TeddZ-r0tJXbxF2B-5phXVTJWp-7hePP1aM')
+  var dsheet=ss.getSheetByName('Data_c')
+  var dbsheet=ss.getSheetByName('Dashboard')
+  var kysheet=ss.getSheetByName('Key')
+  var arr=[]
+  var m=1
+  
+  while(kysheet.getRange(m,7).getValue()!='' && kysheet.getRange(m,7).getValue()!=null){
+    arr.push(kysheet.getRange(m,9).getValue())
+    
+    m++
+  }
+  chart_builder_cc(arr)
+}
+  
+  
+function chart_builder_cc(arr){
+  var ss=SpreadsheetApp.openById('1FBbEUzG8TeddZ-r0tJXbxF2B-5phXVTJWp-7hePP1aM')
+  var dsheet=ss.getSheetByName('Data_c')
+  var lsheet=ss.getSheetByName('Data_l')
+  var dbsheet=ss.getSheetByName('Dashboard')
+  var kysheet=ss.getSheetByName('Key')
+  var charts=dbsheet.getCharts()
+  var chart=charts[0]
+  var ranges=chart.getRanges()
+  Logger.log(ranges[0].getSheet().getName())
+  for(x=0;x<ranges.length;x++){
+    chart=chart.modify().removeRange(ranges[x]).build()
+  }
+  dbsheet.updateChart(chart)
+  Logger.log(ranges[0].getSheet().getName())
+  Logger.log(ranges.length)
+  chart=chart.modify().addRange(dsheet.getRange(1,1,721,1))
+  for (w=0;w<arr.length;w++){
+  
+  chart=chart.addRange(dsheet.getRange(1,arr[w]*3,721,1))}
+  chart=chart.asColumnChart().setStacked().setRange(0, 200)
+  .setOption('vAxes.0.viewWindowMode', 'explicit')
+  .build()
+  dbsheet.updateChart(chart)
+  
+}
+
+  
